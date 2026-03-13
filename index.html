@@ -297,7 +297,7 @@
   }
   .modal-close {
     position: absolute; top: 1rem; right: 1rem;
-    background: none; border: none; color: var(--cinza);
+    background: transparent; border: none; color: var(--cinza);
     font-size: 1.2rem; cursor: pointer;
   }
   .modal h3 {
@@ -446,6 +446,7 @@
 
     .filter-bar { flex-direction: column; gap: 0.75rem; }
     .filter-bar .form-group { min-width: 100%; }
+    .filter-bar button { width: 100%; }
 
     /* Tabela responsiva: scroll horizontal */
     .registros-table { min-width: 520px; }
@@ -908,6 +909,8 @@
 // ⚠️ Substitua pelos valores do seu projeto em: supabase.com → Project Settings → API
 const SUPABASE_URL  = 'https://pahuwyialgafhxgrlehm.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_QQZL_V5TyLiTK6ctdW1AbA_RaEttn0w';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ===================== STATE =====================
 let currentUser = null;
 let currentPage = 'login';
@@ -1891,7 +1894,7 @@ function exportarPlanilha() {
     R('Estabelecimentos comerciais fiscalizados','estabCom'),
     R('Ocorr. ao DP s/ BOPC','ocorrDP'),
     R('Qtde BOPM lavrados','bopm'),
-    R('RAIA conf.','raia'),
+    R('Qtde RAIA conf.','raia'),
     R('Mandado de Busca/Apreensão cumpridos','mandado'),
     R('Ato Infracional','atoInfracional'),
     R('Crime Exc. Tráfico','crimeExc'),
@@ -1918,7 +1921,7 @@ function exportarPlanilha() {
     R('Explosivo/Detonador','explosivo'),
     R('Outro Mat. Bélico','outroBelico'),
     H('APREENSÕES'),
-    R('Moedas (Valor em R$)', 'moedas'),
+    R('Moedas (Valor em R$)','moedas'),
     R('Medicamento','medicamento'),
     R('Cigarro','cigarro'),
     R('Eqpto Eletrônico','eletronico'),
