@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operação Impacto - PMESP</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --azul: #0a1628;
+    --azul-medio: #122040;
+    --azul-claro: #1a3a6b;
+    --dourado: #c9a227;
+    --dourado-claro: #e8c050;
+    --vermelho: #c0392b;
+    --verde: #1e8449;
+    --cinza: #8a9bb5;
+    --branco: #f0f4ff;
+    --text: #d0daf0;
+    --borda: rgba(201,162,39,0.25);
+    --card: rgba(18,32,64,0.85);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--azul);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(201,162,39,0.04) 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(201,162,39,0.04) 60px);
+  }
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #060e1f 0%, var(--azul-medio) 100%);
+    border-bottom: 2px solid var(--dourado);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .header-brand { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; }
+  .header-logo {
+    width: 56px; height: 56px;
+    background: var(--dourado);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 1rem; color: var(--azul);
+    flex-shrink: 0;
+  }
+  .header-title h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: var(--dourado); letter-spacing: 0.1em;
+  }
+  .header-title p { font-size: 0.75rem; color: var(--cinza); letter-spacing: 0.15em; text-transform: uppercase; }
+  .header-nav { display: flex; gap: 0.5rem; }
+  .nav-btn {
+    background: transparent; border: 1px solid var(--borda);
+    color: var(--cinza); padding: 0.5rem 1.2rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 0.85rem; letter-spacing: 0.08em;
+    cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s; border-radius: 2px;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--dourado); color: var(--azul);
+    border-color: var(--dourado);
+  }
+  .user-info {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .user-badge {
+    background: var(--azul-claro); border: 1px solid var(--borda);
+    padding: 0.4rem 1rem; border-radius: 2px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    color: var(--dourado-claro); letter-spacing: 0.05em;
+  }
+  .logout-btn {
+    background: transparent; border: 1px solid rgba(192,57,43,0.4);
+    color: #e74c3c; padding: 0.4rem 0.8rem;
+    cursor: pointer; font-size: 0.75rem; border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { background: rgba(192,57,43,0.15); }
+
+  /* PAGES */
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* LOGIN */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #060e1f 0%, #0d1e3e 50%, #060e1f 100%);
+  }
+  .login-card {
+    background: var(--card);
+    border: 1px solid var(--borda);
+    padding: 3rem 2.5rem; width: 420px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .login-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--dourado), transparent);
+  }
+  .login-logo {
+    text-align: center; margin-bottom: 2rem;
+  }
+  .login-hex {
+    width: 80px; height: 80px; margin: 0 auto 1rem;
+    background: linear-gradient(135deg, var(--dourado), var(--dourado-claro));
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--azul);
+  }
+  .login-logo h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem; color: var(--dourado); letter-spacing: 0.1em;
+  }
+  .login-logo p { color: var(--cinza); font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; }
+
+  .form-group { margin-bottom: 1.2rem; }
+  .form-group label {
+    display: block; font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--cinza); margin-bottom: 0.4rem;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: rgba(10,22,40,0.8);
+    border: 1px solid rgba(138,155,181,0.25);
+    color: var(--branco); padding: 0.75rem 1rem;
+    font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+    border-radius: 2px; transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--dourado);
+  }
+  .form-group select option { background: var(--azul-medio); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  .btn-primary {
+    width: 100%; background: var(--dourado);
+    border: none; color: var(--azul); padding: 0.85rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 1rem; letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+    margin-top: 0.5rem;
+  }
+  .btn-primary:hover { background: var(--dourado-claro); transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; border: 1px solid var(--borda);
+    color: var(--cinza); padding: 0.7rem 1.5rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--cinza); color: var(--branco); }
+  .btn-danger {
+    background: rgba(192,57,43,0.15); border: 1px solid rgba(192,57,43,0.4);
+    color: #e74c3c; padding: 0.5rem 1rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  }
+  .btn-success {
+    background: rgba(30,132,73,0.15); border: 1px solid rgba(30,132,73,0.4);
+    color: #27ae60; padding: 0.5rem 1rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: all 0.2s;
+  }
+  .toggle-link {
+    text-align: center; margin-top: 1.5rem;
+    font-size: 0.82rem; color: var(--cinza);
+  }
+  .toggle-link a { color: var(--dourado); cursor: pointer; text-decoration: none; }
+  .toggle-link a:hover { color: var(--dourado-claro); }
+
+  /* MAIN LAYOUT */
+  .main-container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--dourado);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    border-bottom: 1px solid var(--borda); padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-title::before {
+    content: ''; display: inline-block;
+    width: 4px; height: 22px; background: var(--dourado);
+    border-radius: 2px;
+  }
+
+  /* TURNO FORM */
+  .turno-card {
+    background: var(--card); border: 1px solid var(--borda);
+    padding: 2rem; margin-bottom: 2rem; position: relative;
+    backdrop-filter: blur(8px);
+  }
+  .turno-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--dourado), transparent);
+  }
+  .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .col-span-4 { grid-column: span 4; }
+
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--dourado-claro);
+    background: rgba(201,162,39,0.08); border: 1px solid rgba(201,162,39,0.15);
+    padding: 0.4rem 1rem; margin: 1.5rem 0 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  /* REGISTROS TABLE */
+  .registros-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .registros-table th {
+    background: rgba(201,162,39,0.1); border: 1px solid var(--borda);
+    padding: 0.7rem 1rem; text-align: left;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--dourado-claro); font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .registros-table td {
+    border: 1px solid rgba(138,155,181,0.12);
+    padding: 0.65rem 1rem;
+    color: var(--text);
+  }
+  .registros-table tr:hover td { background: rgba(201,162,39,0.04); }
+  
+  .badge {
+    display: inline-block; padding: 0.2rem 0.6rem;
+    border-radius: 2px; font-size: 0.7rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .badge-00 { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+  .badge-06 { background: rgba(243,156,18,0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+  .badge-18 { background: rgba(155,89,182,0.15); color: #9b59b6; border: 1px solid rgba(155,89,182,0.3); }
+  .badge-pendente { background: rgba(243,156,18,0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+  .badge-validado { background: rgba(30,132,73,0.15); color: #27ae60; border: 1px solid rgba(30,132,73,0.3); }
+  .badge-rejeitado { background: rgba(192,57,43,0.15); color: #e74c3c; border: 1px solid rgba(192,57,43,0.3); }
+
+  /* DASHBOARD */
+  .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+  .dash-card {
+    background: var(--card); border: 1px solid var(--borda);
+    padding: 1.5rem; position: relative; overflow: hidden;
+  }
+  .dash-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: var(--cor-destaque, var(--dourado));
+  }
+  .dash-card .label {
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--cinza); margin-bottom: 0.5rem;
+  }
+  .dash-card .value {
+    font-family: 'Rajdhani', sans-serif; font-size: 2.2rem;
+    font-weight: 700; color: var(--branco); line-height: 1;
+  }
+  .dash-card .sub { font-size: 0.72rem; color: var(--cinza); margin-top: 0.4rem; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(4,10,25,0.85); z-index: 200;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--azul-medio); border: 1px solid var(--borda);
+    padding: 2rem; max-width: 600px; width: 90%;
+    max-height: 80vh; overflow-y: auto; position: relative;
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--dourado), transparent);
+  }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: transparent; border: none; color: var(--cinza);
+    font-size: 1.2rem; cursor: pointer;
+  }
+  .modal h3 {
+    font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+    color: var(--dourado); letter-spacing: 0.08em;
+    margin-bottom: 1.5rem;
+  }
+
+  /* DETAIL VIEW */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; }
+  .detail-row { display: flex; flex-direction: column; padding: 0.4rem 0; border-bottom: 1px solid rgba(138,155,181,0.08); }
+  .detail-row .d-label { font-size: 0.68rem; color: var(--cinza); letter-spacing: 0.1em; text-transform: uppercase; }
+  .detail-row .d-val { font-size: 0.88rem; color: var(--branco); font-weight: 500; }
+  .detail-section {
+    font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--dourado);
+    margin: 1rem 0 0.5rem; grid-column: span 2;
+  }
+
+  /* NOTIF */
+  .notif {
+    position: fixed; top: 80px; right: 1.5rem; z-index: 300;
+    background: var(--azul-medio); border: 1px solid var(--borda);
+    padding: 0.85rem 1.5rem; font-size: 0.85rem;
+    animation: slideIn 0.3s ease; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+  .notif.success { border-left: 3px solid var(--verde); }
+  .notif.error { border-left: 3px solid var(--vermelho); }
+  .notif.info { border-left: 3px solid var(--dourado); }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--borda); margin-bottom: 1.5rem; }
+  .tab {
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    color: var(--cinza); padding: 0.75rem 1.5rem;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; margin-bottom: -1px; transition: all 0.2s;
+  }
+  .tab:hover { color: var(--branco); }
+  .tab.active { color: var(--dourado); border-bottom-color: var(--dourado); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    background: var(--card); border: 1px solid var(--borda);
+    padding: 1rem 1.5rem; display: flex; gap: 1rem;
+    align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .filter-bar .form-group { margin-bottom: 0; flex: 1; min-width: 150px; }
+
+  .empty-state {
+    text-align: center; padding: 3rem;
+    color: var(--cinza); font-size: 0.9rem;
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .form-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; flex-wrap: wrap; }
+
+  /* ─── HAMBURGER MENU ─── */
+  .hamburger {
+    display: none; flex-direction: column; justify-content: center;
+    gap: 5px; background: none; border: none; cursor: pointer;
+    padding: 0.5rem; z-index: 201;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--dourado); border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .mobile-nav {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(4,10,25,0.97); z-index: 200;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.5rem;
+  }
+  .mobile-nav.open { display: flex; }
+  .mobile-nav .nav-btn {
+    font-size: 1.3rem; padding: 0.9rem 3rem; width: 260px; text-align: center;
+  }
+  .mobile-nav .user-badge { font-size: 0.85rem; padding: 0.5rem 1.5rem; }
+  .mobile-nav .logout-btn { font-size: 0.85rem; padding: 0.5rem 1.5rem; }
+
+  /* ─── BREAKPOINT 900px ─── */
+  @media (max-width: 900px) {
+    .main-container { padding: 1.25rem; }
+    .form-grid       { grid-template-columns: 1fr 1fr; }
+    .form-grid-4     { grid-template-columns: 1fr 1fr; }
+    .dash-grid       { grid-template-columns: 1fr 1fr; }
+    .col-span-3, .col-span-4 { grid-column: span 2; }
+    .header-nav, .user-info { display: none; }
+    .hamburger { display: flex; }
+    .header { padding: 0 1rem; }
+    .header-logo { width: 44px; height: 44px; font-size: 0.85rem; }
+    .header-title h1 { font-size: 1.15rem; }
+    .header-title p { display: none; }
+    .registros-table { font-size: 0.76rem; }
+    .registros-table th, .registros-table td { padding: 0.5rem 0.6rem; }
+    .tab { padding: 0.65rem 1rem; font-size: 0.78rem; }
+    .turno-card { padding: 1.25rem; }
+    .dash-card { padding: 1.1rem; }
+    .dash-card .value { font-size: 1.8rem; }
+    .modal { padding: 1.5rem; max-height: 90vh; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .detail-section { grid-column: span 1; }
+    .filter-bar { padding: 0.75rem 1rem; }
+    .filter-bar .form-group { min-width: 130px; }
+  }
+
+  /* ─── BREAKPOINT 600px (smartphones) ─── */
+  @media (max-width: 600px) {
+    .main-container { padding: 0.85rem; }
+    .form-grid       { grid-template-columns: 1fr; }
+    .form-grid-2     { grid-template-columns: 1fr; }
+    .form-grid-4     { grid-template-columns: 1fr; }
+    .col-span-2      { grid-column: span 1; }
+    .col-span-3, .col-span-4 { grid-column: span 1; }
+    .dash-grid       { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .dash-card       { padding: 0.9rem 0.75rem; }
+    .dash-card .value { font-size: 1.5rem; }
+    .dash-card .label { font-size: 0.62rem; }
+
+    .section-title   { font-size: 1rem; }
+    .section-label   { font-size: 0.72rem; padding: 0.35rem 0.75rem; margin: 1.1rem 0 0.75rem; }
+    .form-group label { font-size: 0.68rem; }
+    .form-group input, .form-group select, .form-group textarea { font-size: 0.85rem; padding: 0.65rem 0.75rem; }
+
+    .turno-card { padding: 1rem; }
+    .login-card { padding: 2rem 1.25rem; width: 100%; margin: 1rem; }
+    .login-hex { width: 64px; height: 64px; }
+    .login-logo h2 { font-size: 1.3rem; }
+
+    .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab { padding: 0.6rem 0.85rem; font-size: 0.72rem; white-space: nowrap; }
+
+    .filter-bar { flex-direction: column; gap: 0.75rem; }
+    .filter-bar .form-group { min-width: 100%; }
+    .filter-bar button { width: 100%; }
+
+    /* Tabela responsiva: scroll horizontal */
+    .registros-table { min-width: 520px; }
+    .registros-table th, .registros-table td { padding: 0.45rem 0.5rem; font-size: 0.72rem; }
+
+    .form-actions { flex-direction: column; }
+    .form-actions button { width: 100%; }
+
+    .modal { width: 95%; padding: 1.25rem; margin: 0.5rem; max-height: 92vh; }
+    .modal h3 { font-size: 1rem; margin-bottom: 1rem; }
+    .detail-grid { grid-template-columns: 1fr; gap: 0; }
+    .detail-section { grid-column: span 1; }
+
+    .notif { right: 0.75rem; left: 0.75rem; max-width: 100%; font-size: 0.8rem; }
+
+    .btn-primary, .btn-secondary, .btn-danger, .btn-success { font-size: 0.82rem; }
+    .section-title::before { height: 18px; }
+
+    /* Admin header com botão exportar */
+    #page-admin .main-container > div:first-child { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    #page-admin .main-container > div:first-child button { width: 100%; }
+  }
+
+  /* ─── BREAKPOINT 380px (smartphones pequenos) ─── */
+  @media (max-width: 380px) {
+    .dash-grid { grid-template-columns: 1fr; }
+    .header-title h1 { font-size: 1rem; }
+    .mobile-nav .nav-btn { width: 220px; font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="main-header" style="display:none">
+  <div class="header-brand">
+    <div class="header-logo">PM</div>
+    <div class="header-title">
+      <h1>Operação Impacto</h1>
+      <p>Polícia Militar do Estado de São Paulo</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <button class="nav-btn active" onclick="goPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="goPage('novo-registro')">Novo Registro</button>
+    <button class="nav-btn" id="admin-nav-btn" onclick="goPage('admin')" style="display:none">Administração</button>
+  </nav>
+  <div class="user-info">
+    <div class="user-badge" id="user-badge"></div>
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </div>
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- MOBILE NAV OVERLAY -->
+<div class="mobile-nav" id="mobile-nav">
+  <div class="user-badge" id="user-badge-mobile" style="margin-bottom:0.5rem"></div>
+  <button class="nav-btn" onclick="goPage('dashboard');closeMobileNav()">📊 Dashboard</button>
+  <button class="nav-btn" onclick="goPage('novo-registro');closeMobileNav()">📝 Novo Registro</button>
+  <button class="nav-btn" id="admin-nav-btn-mobile" onclick="goPage('admin');closeMobileNav()" style="display:none">⚙️ Administração</button>
+  <button class="logout-btn" style="margin-top:1rem;padding:0.7rem 2rem;font-size:0.9rem" onclick="logout()">Sair do Sistema</button>
+</div>
+
+<!-- LOGIN PAGE -->
+<div id="page-login" class="page active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-hex">PM</div>
+        <h2>OPERAÇÃO IMPACTO</h2>
+        <p>Polícia Militar · PMESP</p>
+      </div>
+      <!-- LOGIN FORM -->
+      <div id="login-form">
+        <div class="form-group">
+          <label>Matrícula / E-mail</label>
+          <input type="text" id="login-email" placeholder="Digite sua matrícula ou e-mail" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="login-senha" placeholder="••••••••" />
+        </div>
+        <button class="btn-primary" onclick="fazerLogin()">Acessar Sistema</button>
+        <div class="toggle-link">
+          Não tem acesso? <a onclick="toggleCadastro()">Cadastre-se</a>
+        </div>
+      </div>
+      <!-- CADASTRO FORM -->
+      <div id="cadastro-form" style="display:none">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Nome Completo</label>
+            <input type="text" id="cad-nome" placeholder="Seu nome completo" />
+          </div>
+          <div class="form-group">
+            <label>Matrícula</label>
+            <input type="text" id="cad-matricula" placeholder="Nº de matrícula" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Posto / Graduação</label>
+          <select id="cad-posto">
+            <option value="">Selecione</option>
+            <option>Sd PM</option><option>Cb PM</option><option>3º Sgt PM</option>
+            <option>2º Sgt PM</option><option>1º Sgt PM</option><option>Sgt PM</option>
+            <option>Ten PM</option><option>1º Ten PM</option><option>Cap PM</option>
+            <option>Maj PM</option><option>Ten Cel PM</option><option>Cel PM</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Unidade / CIA</label>
+          <select id="cad-unidade">
+            <option value="">Selecione</option>
+            <option>3 CIA PM</option><option>Pel - Cândido Mota</option>
+            <option>Pel - Palmital</option><option>GP - Platina</option>
+            <option>GP - CNP</option><option>GP - Ibirarema</option>
+            <option>GP - Florinéia</option><option>GP - Tarumã</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="cad-email" placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <button class="btn-primary" onclick="fazerCadastro()">Criar Conta</button>
+        <div class="toggle-link">
+          Já tem acesso? <a onclick="toggleCadastro()">Fazer Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="page-dashboard" class="page">
+  <div class="main-container">
+    <div class="section-title">Dashboard Geral</div>
+    <div class="dash-grid" id="dash-cards"></div>
+    
+    <div class="tab-bar">
+      <button class="tab active" onclick="setTab('tab-hoje')">Hoje</button>
+      <button class="tab" onclick="setTab('tab-semana')">Esta Semana</button>
+      <button class="tab" onclick="setTab('tab-todos')">Todos os Registros</button>
+    </div>
+
+    <div id="tab-hoje" class="tab-panel active">
+      <div id="registros-hoje"></div>
+    </div>
+    <div id="tab-semana" class="tab-panel">
+      <div id="registros-semana"></div>
+    </div>
+    <div id="tab-todos" class="tab-panel">
+      <div class="filter-bar">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="filtro-data">
+        </div>
+        <div class="form-group">
+          <label>Turno</label>
+          <select id="filtro-turno">
+            <option value="">Todos</option>
+            <option>00:00 - 06:00</option>
+            <option>06:00 - 18:00</option>
+            <option>18:00 - 00:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="filtro-status">
+            <option value="">Todos</option>
+            <option>Pendente</option>
+            <option>Validado</option>
+            <option>Rejeitado</option>
+          </select>
+        </div>
+        <button class="btn-secondary" onclick="renderTodos()">Filtrar</button>
+      </div>
+      <div id="registros-todos"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOVO REGISTRO PAGE -->
+<div id="page-novo-registro" class="page">
+  <div class="main-container">
+    <div class="section-title" id="form-page-title">Registro de Turno</div>
+    <div id="edit-banner" style="display:none;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.4);padding:0.75rem 1.25rem;margin-bottom:1rem;font-size:0.85rem;color:var(--dourado-claro);align-items:center;gap:0.75rem">
+      <span>✏️</span> Você está <strong>editando</strong> um registro existente. As alterações substituirão os dados anteriores.
+    </div>
+    <div class="turno-card">
+
+      <!-- IDENTIFICAÇÃO -->
+      <div class="section-label">📋 Identificação do Turno</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="r-data" />
+        </div>
+        <div class="form-group">
+          <label>Turno</label>
+          <select id="r-turno">
+            <option value="">Selecione o turno</option>
+            <option>00:00 - 06:00</option>
+            <option>06:00 - 18:00</option>
+            <option>18:00 - 00:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Unidade</label>
+          <select id="r-unidade">
+            <option value="">Selecione</option>
+            <option>3 CIA PM</option><option>Pel - Cândido Mota</option>
+            <option>Pel - Palmital</option><option>GP - Platina</option>
+            <option>GP - CNP</option><option>GP - Ibirarema</option>
+            <option>GP - Florinéia</option><option>GP - Tarumã</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- OPERAÇÃO — linhas 10–19 da planilha -->
+      <div class="section-label">🔵 OPERAÇÃO</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Pessoas abordadas (exc. Condutores)</label><input type="number" id="r-abordadas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Estabelecimentos comerciais fiscalizados</label><input type="number" id="r-estab-com" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Ocorr. ao DP s/ BOPC</label><input type="number" id="r-ocorr-dp" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Qtde BOPM lavrados</label><input type="number" id="r-bopm" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Qtde RAIA conf.</label><input type="number" id="r-raia" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Mandado de Busca/Apreensão cumpridos</label><input type="number" id="r-mandado" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Ato Infracional</label><input type="number" id="r-ato-inf" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Crime Exc. Tráfico</label><input type="number" id="r-crime-exc" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Tráfico de entorpecentes</label><input type="number" id="r-trafico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- PESSOAS — linhas 20–25 -->
+      <div class="section-label">👤 PESSOAS</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Pessoas Presas</label><input type="number" id="r-presas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Adolesc. Sindicados</label><input type="number" id="r-adol-sind" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Adolesc. Apreendidos</label><input type="number" id="r-adol-apreend" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Procurados</label><input type="number" id="r-procurados" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Manifestantes</label><input type="number" id="r-manifestantes" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- DROGAS — linhas 26–32 -->
+      <div class="section-label">⚠️ DROGAS</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Cocaína (em Kg)</label><input type="number" id="r-cocaina" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Crack (em Kg)</label><input type="number" id="r-crack" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Maconha (em Kg)</label><input type="number" id="r-maconha" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Heroína (em Kg)</label><input type="number" id="r-heroina" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outra Droga (em Kg)</label><input type="number" id="r-outra-droga-kg" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outra Droga (em Qtde)</label><input type="number" id="r-outra-droga-qtde" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- MATERIAL BÉLICO — linhas 33–40 -->
+      <div class="section-label">🔫 MATERIAL BÉLICO</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Arma Branca</label><input type="number" id="r-arma-branca" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Arma Fogo (Cal. Permitido)</label><input type="number" id="r-arma-perm" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Arma Fogo (Cal. Restrito)</label><input type="number" id="r-arma-rest" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Munição (Cal. Permitido)</label><input type="number" id="r-mun-perm" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Munição (Cal. Restrito)</label><input type="number" id="r-mun-rest" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Explosivo/Detonador</label><input type="number" id="r-explosivo" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outro Mat. Bélico</label><input type="number" id="r-outro-belico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- APREENSÕES — linhas 41–48 -->
+      <div class="section-label">📦 APREENSÕES</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Moedas (Valor em R$)</label><input type="number" id="r-moedas" step="0.01" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Medicamento</label><input type="number" id="r-medicamento" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Cigarro</label><input type="number" id="r-cigarro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Eqpto Eletrônico</label><input type="number" id="r-eletronico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Prod. Químico</label><input type="number" id="r-quimico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Descaminho</label><input type="number" id="r-descaminho" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outros Tipos Apreensão</label><input type="number" id="r-outros-apreensao" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- TRÂNSITO (URBANO) — linhas 49–66 -->
+      <div class="section-label">🚗 TRÂNSITO (URBANO)</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Acidentes de Trânsito SEM Vítima</label><input type="number" id="r-acid-sem-vitima" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Acidente COM Vítima</label><input type="number" id="r-acid-vitima" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Vítima NÃO Fatal</label><input type="number" id="r-vitima-nao-fatal" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Vítima FATAL</label><input type="number" id="r-vitima-fatal" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>AIT (Exceto Art. 165/165-A/228 e 253A)</label><input type="number" id="r-ait-demais" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>AIT Art.165 CTB</label><input type="number" id="r-ait165" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>AIT Art.165-A CTB</label><input type="number" id="r-ait165a" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>AIT Art.228 CTB</label><input type="number" id="r-ait228" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>AIT Art.253-A CTB</label><input type="number" id="r-ait253a" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Bloqueios</label><input type="number" id="r-bloqueios" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Pontos de Visibilidade</label><input type="number" id="r-pontos-vis" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Condutores Fiscalizados</label><input type="number" id="r-condutores" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Teste Etilômetro Realizado</label><input type="number" id="r-bafometro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Flagrante Art. 306 CTB</label><input type="number" id="r-flagrante306" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>CLA Apreendido</label><input type="number" id="r-cla" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>CNH Apreendido</label><input type="number" id="r-cnh" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outro Documento Apreendido</label><input type="number" id="r-doc-apreend" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- VEÍCULO FISCALIZADOS (NÃO REMOVIDOS) — linhas 67–72 -->
+      <div class="section-label">🚘 VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Auto</label><input type="number" id="r-vf-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Moto</label><input type="number" id="r-vf-moto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Coletivo</label><input type="number" id="r-vf-coletivo" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Veículo de Carga</label><input type="number" id="r-vf-carga" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vf-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- VEÍCULO REMOVIDO — linhas 73–78 -->
+      <div class="section-label">🚘 VEÍCULO REMOVIDO</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Auto</label><input type="number" id="r-vr-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Moto</label><input type="number" id="r-vr-moto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Coletivo</label><input type="number" id="r-vr-coletivo" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Veículo de Carga</label><input type="number" id="r-vr-carga" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vr-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- VEÍCULO LOCALIZADO — linhas 79–84 -->
+      <div class="section-label">🚘 VEÍCULO LOCALIZADO</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Auto</label><input type="number" id="r-vl-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Moto</label><input type="number" id="r-vl-moto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Coletivo</label><input type="number" id="r-vl-coletivo" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Veículo de Carga</label><input type="number" id="r-vl-carga" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vl-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- BOMBEIROS — linhas 85–90 -->
+      <div class="section-label">🚒 BOMBEIROS</div>
+      <div class="form-grid-4">
+        <div class="form-group"><label>Incêndio</label><input type="number" id="r-incendio" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Salvamento</label><input type="number" id="r-salvamento" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Afogamento (fatal)</label><input type="number" id="r-afogamento" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Condução ao PS / hospital</label><input type="number" id="r-conducao-ps" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Resgate</label><input type="number" id="r-resgate" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+      </div>
+
+      <!-- RODAPÉ — linhas 91–93 -->
+      <div class="section-label">📝 Encerramento do Turno</div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Elaborado por</label>
+          <input type="text" id="r-elaborado-por" placeholder="Nome do responsável pela elaboração" />
+        </div>
+        <div class="form-group">
+          <label>Conferido por</label>
+          <input type="text" id="r-conferido-por" placeholder="Nome do responsável pela conferência" />
+        </div>
+        <div class="form-group col-span-2">
+          <label>e-mail remetente</label>
+          <input type="email" id="r-email-remetente" placeholder="email@pmesp.gov.br" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ocorrências Relevantes / Observações do Turno</label>
+        <textarea id="r-obs" rows="4" placeholder="Descreva ocorrências relevantes, situações especiais, etc."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="limparForm()">Limpar</button>
+        <button id="btn-cancelar-edicao" class="btn-danger" style="display:none" onclick="cancelarEdicao()">Cancelar Edição</button>
+        <button class="btn-primary" id="btn-salvar-form" onclick="salvarRegistro()">Enviar Registro do Turno</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="page-admin" class="page">
+  <div class="main-container">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+      <div class="section-title" style="margin-bottom:0;border:none;padding:0">Painel de Administração</div>
+      <button class="btn-primary" style="width:auto;padding:0.65rem 1.8rem;display:flex;align-items:center;gap:0.6rem" onclick="abrirModalExportar()">
+        <span style="font-size:1.1rem">⬇</span> Exportar Planilha IMPACTO
+      </button>
+    </div>
+    
+    <div class="tab-bar">
+      <button class="tab active" onclick="setAdminTab('admin-pendentes')">Pendentes de Validação</button>
+      <button class="tab" onclick="setAdminTab('admin-usuarios')">Usuários</button>
+    </div>
+
+    <div id="admin-pendentes" class="tab-panel active">
+      <div id="lista-pendentes"></div>
+    </div>
+    <div id="admin-usuarios" class="tab-panel">
+      <div id="lista-usuarios"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORTAR -->
+<div class="modal-overlay" id="modal-exportar">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-close" onclick="fecharModal('modal-exportar')">✕</button>
+    <h3>Exportar Planilha de Resultados</h3>
+    <p style="font-size:0.82rem;color:var(--cinza);margin-bottom:1.5rem">
+      Selecione a data. Os dados dos 3 turnos validados serão somados e exportados no formato original da Planilha IMPACTO.
+    </p>
+    <div class="form-group">
+      <label>Data do Relatório</label>
+      <input type="date" id="export-data" />
+    </div>
+    <div class="form-group">
+      <label>Unidade (opcional — deixe em branco para todas)</label>
+      <select id="export-unidade">
+        <option value="">Todas as Unidades</option>
+        <option>3 CIA PM</option><option>Pel - Cândido Mota</option>
+        <option>Pel - Palmital</option><option>GP - Platina</option>
+        <option>GP - CNP</option><option>GP - Ibirarema</option>
+        <option>GP - Florinéia</option><option>GP - Tarumã</option>
+      </select>
+    </div>
+    <div id="export-preview" style="background:rgba(10,22,40,0.6);border:1px solid var(--borda);padding:1rem;margin-bottom:1.2rem;font-size:0.78rem;color:var(--cinza);display:none"></div>
+    <div style="display:flex;gap:1rem;justify-content:flex-end">
+      <button class="btn-secondary" onclick="fecharModal('modal-exportar')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:0.65rem 1.5rem" onclick="exportarPlanilha()">Baixar .xlsx</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal-overlay" id="modal-detalhe">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal('modal-detalhe')">✕</button>
+    <h3 id="modal-titulo">Detalhes do Registro</h3>
+    <div id="modal-conteudo"></div>
+    <div id="modal-acoes" style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay" id="modal-excluir">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="fecharModal('modal-excluir')">✕</button>
+    <h3 style="color:#e74c3c">Confirmar Exclusão</h3>
+    <p style="font-size:0.85rem;color:var(--cinza);margin:1rem 0 1.5rem">Tem certeza que deseja excluir este registro? Esta ação <strong style="color:#e74c3c">não pode ser desfeita</strong>.</p>
+    <div id="excluir-info" style="background:rgba(10,22,40,0.6);border:1px solid var(--borda);padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.82rem;color:var(--text)"></div>
+    <div style="display:flex;gap:1rem;justify-content:flex-end">
+      <button class="btn-secondary" onclick="fecharModal('modal-excluir')">Cancelar</button>
+      <button class="btn-danger" id="btn-confirmar-excluir" onclick="">Excluir Definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIF CONTAINER -->
+<div id="notif-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ===================== SUPABASE CONFIG =====================
+// ⚠️ Substitua pelos valores do seu projeto em: supabase.com → Project Settings → API
+const SUPABASE_URL  = 'https://pahuwyialgafhxgrlehm.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_QQZL_V5TyLiTK6ctdW1AbA_RaEttn0w';
+const sb = supabase.createClient(https://pahuwyialgafhxgrlehm.supabase.co, sb_publishable_QQZL_V5TyLiTK6ctdW1AbA_RaEttn0w);
+
+// ===================== STATE =====================
+let currentUser = null;
+let currentPage = 'login';
+let currentTab  = 'tab-hoje';
+let currentAdminTab = 'admin-pendentes';
+let editandoId  = null;
+let _registrosCache = [];  // cache local para exportação e detalhes
+let _usuariosCache  = [];
+
+// ===================== LOADING OVERLAY =====================
+function showLoading(msg = 'Carregando...') {
+  let el = document.getElementById('loading-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = `
+      position:fixed;inset:0;background:rgba(6,14,31,0.85);z-index:500;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;
+      backdrop-filter:blur(4px);
+    `;
+    el.innerHTML = `
+      <div style="width:40px;height:40px;border:3px solid rgba(201,162,39,0.2);
+        border-top-color:var(--dourado);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      <div id="loading-msg" style="font-family:'Rajdhani',sans-serif;color:var(--dourado);
+        letter-spacing:0.1em;font-size:0.9rem"></div>
+    `;
+    document.body.appendChild(el);
+    const style = document.createElement('style');
+    style.textContent = `@keyframes spin{to{transform:rotate(360deg)}}`;
+    document.head.appendChild(style);
+  }
+  document.getElementById('loading-msg').textContent = msg;
+  el.style.display = 'flex';
+}
+function hideLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'none';
+}
+
+// ===================== MAPEAMENTO DB → APP =====================
+// Converte linha do banco (colunas flat) para objeto aninhado usado pelo UI
+function dbParaApp(r) {
+  return {
+    id:            r.id,
+    data:          r.data,
+    turno:         r.turno,
+    unidade:       r.unidade,
+    status:        r.status,
+    operadorId:    r.operador_id,
+    operadorNome:  r.operador_nome,
+    criadoEm:      r.criado_em,
+    validadoEm:    r.validado_em,
+    validadoPor:   r.validado_por,
+    editadoEm:     r.editado_em,
+    editadoPor:    r.editado_por,
+    elaboradoPor:  r.elaborado_por,
+    conferidoPor:  r.conferido_por,
+    emailRemetente:r.email_remetente,
+    obs:           r.obs,
+    dados: {
+      operacao: {
+        abordadas:      r.op_abordadas,    estabCom:       r.op_estab_com,
+        ocorrDP:        r.op_ocorr_dp,     bopm:           r.op_bopm,
+        raia:           r.op_raia,         mandado:        r.op_mandado,
+        atoInfracional: r.op_ato_infracional, crimeExc:    r.op_crime_exc,
+        trafico:        r.op_trafico,
+      },
+      pessoas: {
+        presas:          r.ps_presas,      adolSindicados:  r.ps_adol_sindicados,
+        adolApreendidos: r.ps_adol_apreendidos, procurados: r.ps_procurados,
+        manifestantes:   r.ps_manifestantes,
+      },
+      drogas: {
+        cocaina: r.dr_cocaina,  crack: r.dr_crack,  maconha: r.dr_maconha,
+        heroina: r.dr_heroina,  outraDrogaKg: r.dr_outra_droga_kg,
+        outraDrogaQtde: r.dr_outra_droga_qtde,
+      },
+      belico: {
+        armaBranca:       r.bl_arma_branca,    armaPermitida:    r.bl_arma_permitida,
+        armaRestrita:     r.bl_arma_restrita,  municaoPermitida: r.bl_municao_permitida,
+        municaoRestrita:  r.bl_municao_restrita, explosivo:      r.bl_explosivo,
+        outroBelico:      r.bl_outro_belico,
+      },
+      apreensoes: {
+        moedas: r.ap_moedas,  medicamento: r.ap_medicamento, cigarro:    r.ap_cigarro,
+        eletronico: r.ap_eletronico, quimico: r.ap_quimico,  descaminho: r.ap_descaminho,
+        outrosApreensao: r.ap_outros,
+      },
+      transito: {
+        acidenteSemVitima: r.tr_acid_sem_vitima, acidenteComVitima: r.tr_acid_com_vitima,
+        vtimaNaoFatal: r.tr_vitima_nao_fatal,    vtimaFatal:        r.tr_vitima_fatal,
+        aitDemais: r.tr_ait_demais, ait165: r.tr_ait165, ait165a: r.tr_ait165a,
+        ait228: r.tr_ait228, ait253a: r.tr_ait253a, bloqueios: r.tr_bloqueios,
+        pontosVis: r.tr_pontos_vis, condutores: r.tr_condutores, bafometro: r.tr_bafometro,
+        flagrante306: r.tr_flagrante306, cla: r.tr_cla, cnh: r.tr_cnh,
+        docApreend: r.tr_doc_apreend,
+      },
+      veicFiscalizado: { auto: r.vf_auto, moto: r.vf_moto, coletivo: r.vf_coletivo, carga: r.vf_carga, outro: r.vf_outro },
+      veicRemovido:    { auto: r.vr_auto, moto: r.vr_moto, coletivo: r.vr_coletivo, carga: r.vr_carga, outro: r.vr_outro },
+      veicLocalizado:  { auto: r.vl_auto, moto: r.vl_moto, coletivo: r.vl_coletivo, carga: r.vl_carga, outro: r.vl_outro },
+      bombeiros: {
+        incendio: r.bm_incendio, salvamento: r.bm_salvamento, resgate: r.bm_resgate,
+        afogamento: r.bm_afogamento, conducaoPS: r.bm_conducao_ps,
+      },
+    }
+  };
+}
+
+// Converte campos do formulário para objeto flat do banco
+function formParaDB(g, gi, gs, data, turno, unidade) {
+  return {
+    data, turno, unidade,
+    elaborado_por:   gs('r-elaborado-por'),
+    conferido_por:   gs('r-conferido-por'),
+    email_remetente: gs('r-email-remetente'),
+    obs:             gs('r-obs'),
+    // OPERAÇÃO
+    op_abordadas: gi('r-abordadas'),   op_estab_com: gi('r-estab-com'),
+    op_ocorr_dp:  gi('r-ocorr-dp'),   op_bopm:      gi('r-bopm'),
+    op_raia:      gi('r-raia'),        op_mandado:   gi('r-mandado'),
+    op_ato_infracional: gi('r-ato-inf'), op_crime_exc: gi('r-crime-exc'),
+    op_trafico:   gi('r-trafico'),
+    // PESSOAS
+    ps_presas: gi('r-presas'), ps_adol_sindicados: gi('r-adol-sind'),
+    ps_adol_apreendidos: gi('r-adol-apreend'), ps_procurados: gi('r-procurados'),
+    ps_manifestantes: gi('r-manifestantes'),
+    // DROGAS
+    dr_cocaina: g('r-cocaina'),   dr_crack: g('r-crack'),  dr_maconha: g('r-maconha'),
+    dr_heroina: g('r-heroina'),   dr_outra_droga_kg: g('r-outra-droga-kg'),
+    dr_outra_droga_qtde: gi('r-outra-droga-qtde'),
+    // BÉLICO
+    bl_arma_branca: gi('r-arma-branca'), bl_arma_permitida: gi('r-arma-perm'),
+    bl_arma_restrita: gi('r-arma-rest'), bl_municao_permitida: gi('r-mun-perm'),
+    bl_municao_restrita: gi('r-mun-rest'), bl_explosivo: gi('r-explosivo'),
+    bl_outro_belico: gi('r-outro-belico'),
+    // APREENSÕES
+    ap_moedas: g('r-moedas'),  ap_medicamento: gi('r-medicamento'), ap_cigarro: gi('r-cigarro'),
+    ap_eletronico: gi('r-eletronico'), ap_quimico: gi('r-quimico'),
+    ap_descaminho: gi('r-descaminho'), ap_outros: gi('r-outros-apreensao'),
+    // TRÂNSITO
+    tr_acid_sem_vitima: gi('r-acid-sem-vitima'), tr_acid_com_vitima: gi('r-acid-vitima'),
+    tr_vitima_nao_fatal: gi('r-vitima-nao-fatal'), tr_vitima_fatal: gi('r-vitima-fatal'),
+    tr_ait_demais: gi('r-ait-demais'), tr_ait165: gi('r-ait165'), tr_ait165a: gi('r-ait165a'),
+    tr_ait228: gi('r-ait228'), tr_ait253a: gi('r-ait253a'), tr_bloqueios: gi('r-bloqueios'),
+    tr_pontos_vis: gi('r-pontos-vis'), tr_condutores: gi('r-condutores'),
+    tr_bafometro: gi('r-bafometro'), tr_flagrante306: gi('r-flagrante306'),
+    tr_cla: gi('r-cla'), tr_cnh: gi('r-cnh'), tr_doc_apreend: gi('r-doc-apreend'),
+    // VEÍCULOS
+    vf_auto: gi('r-vf-auto'), vf_moto: gi('r-vf-moto'), vf_coletivo: gi('r-vf-coletivo'),
+    vf_carga: gi('r-vf-carga'), vf_outro: gi('r-vf-outro'),
+    vr_auto: gi('r-vr-auto'), vr_moto: gi('r-vr-moto'), vr_coletivo: gi('r-vr-coletivo'),
+    vr_carga: gi('r-vr-carga'), vr_outro: gi('r-vr-outro'),
+    vl_auto: gi('r-vl-auto'), vl_moto: gi('r-vl-moto'), vl_coletivo: gi('r-vl-coletivo'),
+    vl_carga: gi('r-vl-carga'), vl_outro: gi('r-vl-outro'),
+    // BOMBEIROS
+    bm_incendio: gi('r-incendio'), bm_salvamento: gi('r-salvamento'),
+    bm_resgate: gi('r-resgate'),   bm_afogamento: gi('r-afogamento'),
+    bm_conducao_ps: gi('r-conducao-ps'),
+  };
+}
+
+// ===================== AUTH =====================
+function toggleCadastro() {
+  const lf = document.getElementById('login-form');
+  const cf = document.getElementById('cadastro-form');
+  lf.style.display = lf.style.display === 'none' ? 'block' : 'none';
+  cf.style.display = cf.style.display === 'none' ? 'block' : 'none';
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!email || !senha) { notif('Preencha todos os campos.', 'error'); return; }
+
+  showLoading('Autenticando...');
+  try {
+    // Permite login por matrícula: busca e-mail correspondente
+    let loginEmail = email;
+    if (!email.includes('@')) {
+      const { data: u } = await sb.from('usuarios').select('email').eq('matricula', email).single();
+      if (!u) { hideLoading(); notif('Matrícula não encontrada.', 'error'); return; }
+      loginEmail = u.email;
+    }
+
+    const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password: senha });
+    if (error) { hideLoading(); notif('Credenciais inválidas.', 'error'); return; }
+
+    await carregarPerfil(data.user.id);
+  } catch(e) {
+    hideLoading();
+    notif('Erro ao conectar. Verifique sua conexão.', 'error');
+  }
+}
+
+async function fazerCadastro() {
+  const nome    = document.getElementById('cad-nome').value.trim();
+  const mat     = document.getElementById('cad-matricula').value.trim();
+  const posto   = document.getElementById('cad-posto').value;
+  const unidade = document.getElementById('cad-unidade').value;
+  const email   = document.getElementById('cad-email').value.trim();
+  const senha   = document.getElementById('cad-senha').value;
+
+  if (!nome || !mat || !posto || !unidade || !email || !senha) { notif('Preencha todos os campos.', 'error'); return; }
+  if (senha.length < 6) { notif('Senha deve ter ao menos 6 caracteres.', 'error'); return; }
+
+  showLoading('Criando conta...');
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: senha,
+      options: { data: { nome, matricula: mat, posto, unidade, perfil: 'operador' } }
+    });
+    if (error) { hideLoading(); notif(error.message, 'error'); return; }
+
+    // O trigger fn_criar_usuario_perfil cria o registro em usuarios automaticamente.
+    // Buscamos o perfil criado.
+    await carregarPerfil(data.user.id);
+  } catch(e) {
+    hideLoading();
+    notif('Erro ao criar conta. Tente novamente.', 'error');
+  }
+}
+
+async function carregarPerfil(authId) {
+  const { data: perfil, error } = await sb.from('usuarios')
+    .select('*')
+    .eq('auth_id', authId)
+    .single();
+
+  if (error || !perfil) {
+    hideLoading();
+    notif('Perfil não encontrado. Contate o administrador.', 'error');
+    await sb.auth.signOut();
+    return;
+  }
+  currentUser = {
+    id:       perfil.id,
+    authId:   perfil.auth_id,
+    nome:     perfil.nome,
+    matricula:perfil.matricula,
+    posto:    perfil.posto,
+    unidade:  perfil.unidade,
+    email:    perfil.email,
+    perfil:   perfil.perfil,
+  };
+  hideLoading();
+  iniciarSessao();
+}
+
+function iniciarSessao() {
+  document.getElementById('main-header').style.display = 'flex';
+  const badge = `${currentUser.posto} ${currentUser.nome.split(' ')[0]}`;
+  document.getElementById('user-badge').textContent = badge;
+  document.getElementById('user-badge-mobile').textContent = badge;
+  if (currentUser.perfil === 'admin') {
+    document.getElementById('admin-nav-btn').style.display = 'inline-block';
+    document.getElementById('admin-nav-btn-mobile').style.display = 'block';
+  }
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('r-data').value = today;
+  if (currentUser.unidade && document.getElementById('r-unidade')) {
+    document.getElementById('r-unidade').value = currentUser.unidade;
+  }
+  goPage('dashboard');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  _registrosCache = [];
+  _usuariosCache  = [];
+  closeMobileNav();
+  document.getElementById('main-header').style.display = 'none';
+  document.getElementById('admin-nav-btn').style.display = 'none';
+  document.getElementById('admin-nav-btn-mobile').style.display = 'none';
+  goPage('login');
+}
+
+// Verificar sessão existente ao carregar a página
+(async function verificarSessao() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await carregarPerfil(session.user.id);
+})();
+
+// ===================== MOBILE NAV =====================
+function toggleMobileNav() {
+  const nav = document.getElementById('mobile-nav');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobile-nav').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+}
+// Close mobile nav on outside click
+document.addEventListener('click', e => {
+  const nav = document.getElementById('mobile-nav');
+  const btn = document.getElementById('hamburger-btn');
+  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
+    closeMobileNav();
+  }
+});
+
+// ===================== NAVIGATION =====================
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.header-nav .nav-btn[onclick="goPage('${page}')"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+  currentPage = page;
+  closeMobileNav();
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'admin') renderAdmin();
+}
+
+function setTab(tabId) {
+  document.querySelectorAll('#page-dashboard .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-dashboard .tab-panel').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  currentTab = tabId;
+  if (tabId === 'tab-hoje') renderHoje();
+  if (tabId === 'tab-semana') renderSemana();
+  if (tabId === 'tab-todos') renderTodos();
+}
+
+function setAdminTab(tabId) {
+  document.querySelectorAll('#page-admin .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-admin .tab-panel').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  if (tabId === 'admin-pendentes') renderPendentes();
+  if (tabId === 'admin-usuarios') renderUsuarios();
+}
+
+// ===================== FORM =====================
+function limparForm() {
+  document.querySelectorAll('#page-novo-registro input[type=number]').forEach(i => i.value = 0);
+  document.getElementById('r-turno').value = '';
+  document.getElementById('r-obs').value = '';
+  document.getElementById('r-elaborado-por').value = '';
+  document.getElementById('r-conferido-por').value = '';
+  document.getElementById('r-email-remetente').value = '';
+}
+
+function setEditMode(on) {
+  editandoId = on ? editandoId : null;
+  document.getElementById('edit-banner').style.display = on ? 'flex' : 'none';
+  document.getElementById('form-page-title').textContent = on ? 'Editar Registro de Turno' : 'Registro de Turno';
+  document.getElementById('btn-cancelar-edicao').style.display = on ? 'inline-block' : 'none';
+  document.getElementById('btn-salvar-form').textContent = on ? 'Salvar Alterações' : 'Enviar Registro do Turno';
+}
+
+function cancelarEdicao() {
+  editandoId = null;
+  limparForm();
+  setEditMode(false);
+  goPage('dashboard');
+}
+
+function editarRegistro(id) {
+  const r = _registrosCache.find(x => x.id === id);
+  if (!r) return;
+  if (r.status === 'Validado' && currentUser.perfil !== 'admin') {
+    notif('Registro validado não pode ser editado por operadores.', 'error'); return;
+  }
+  const d = r.dados;
+  const sv = (id, val) => { const el = document.getElementById(id); if(el) el.value = val ?? 0; };
+  const ss = (id, val) => { const el = document.getElementById(id); if(el) el.value = val ?? ''; };
+  ss('r-data', r.data); ss('r-turno', r.turno); ss('r-unidade', r.unidade);
+  sv('r-abordadas',  d.operacao.abordadas);   sv('r-estab-com',  d.operacao.estabCom);
+  sv('r-ocorr-dp',   d.operacao.ocorrDP);     sv('r-bopm',       d.operacao.bopm);
+  sv('r-raia',       d.operacao.raia);         sv('r-mandado',    d.operacao.mandado);
+  sv('r-ato-inf',    d.operacao.atoInfracional); sv('r-crime-exc', d.operacao.crimeExc);
+  sv('r-trafico',    d.operacao.trafico);
+  sv('r-presas',       d.pessoas.presas);     sv('r-adol-sind',    d.pessoas.adolSindicados);
+  sv('r-adol-apreend', d.pessoas.adolApreendidos); sv('r-procurados', d.pessoas.procurados);
+  sv('r-manifestantes',d.pessoas.manifestantes);
+  sv('r-cocaina', d.drogas.cocaina); sv('r-crack', d.drogas.crack); sv('r-maconha', d.drogas.maconha);
+  sv('r-heroina', d.drogas.heroina); sv('r-outra-droga-kg', d.drogas.outraDrogaKg);
+  sv('r-outra-droga-qtde', d.drogas.outraDrogaQtde);
+  sv('r-arma-branca', d.belico.armaBranca); sv('r-arma-perm', d.belico.armaPermitida);
+  sv('r-arma-rest', d.belico.armaRestrita); sv('r-mun-perm', d.belico.municaoPermitida);
+  sv('r-mun-rest', d.belico.municaoRestrita); sv('r-explosivo', d.belico.explosivo);
+  sv('r-outro-belico', d.belico.outroBelico);
+  sv('r-moedas', d.apreensoes.moedas); sv('r-medicamento', d.apreensoes.medicamento);
+  sv('r-cigarro', d.apreensoes.cigarro); sv('r-eletronico', d.apreensoes.eletronico);
+  sv('r-quimico', d.apreensoes.quimico); sv('r-descaminho', d.apreensoes.descaminho);
+  sv('r-outros-apreensao', d.apreensoes.outrosApreensao);
+  sv('r-acid-sem-vitima', d.transito.acidenteSemVitima); sv('r-acid-vitima', d.transito.acidenteComVitima);
+  sv('r-vitima-nao-fatal', d.transito.vtimaNaoFatal); sv('r-vitima-fatal', d.transito.vtimaFatal);
+  sv('r-ait-demais', d.transito.aitDemais); sv('r-ait165', d.transito.ait165);
+  sv('r-ait165a', d.transito.ait165a); sv('r-ait228', d.transito.ait228);
+  sv('r-ait253a', d.transito.ait253a); sv('r-bloqueios', d.transito.bloqueios);
+  sv('r-pontos-vis', d.transito.pontosVis); sv('r-condutores', d.transito.condutores);
+  sv('r-bafometro', d.transito.bafometro); sv('r-flagrante306', d.transito.flagrante306);
+  sv('r-cla', d.transito.cla); sv('r-cnh', d.transito.cnh); sv('r-doc-apreend', d.transito.docApreend);
+  sv('r-vf-auto', d.veicFiscalizado.auto); sv('r-vf-moto', d.veicFiscalizado.moto);
+  sv('r-vf-coletivo', d.veicFiscalizado.coletivo); sv('r-vf-carga', d.veicFiscalizado.carga); sv('r-vf-outro', d.veicFiscalizado.outro);
+  sv('r-vr-auto', d.veicRemovido.auto); sv('r-vr-moto', d.veicRemovido.moto);
+  sv('r-vr-coletivo', d.veicRemovido.coletivo); sv('r-vr-carga', d.veicRemovido.carga); sv('r-vr-outro', d.veicRemovido.outro);
+  sv('r-vl-auto', d.veicLocalizado.auto); sv('r-vl-moto', d.veicLocalizado.moto);
+  sv('r-vl-coletivo', d.veicLocalizado.coletivo); sv('r-vl-carga', d.veicLocalizado.carga); sv('r-vl-outro', d.veicLocalizado.outro);
+  sv('r-incendio', d.bombeiros.incendio); sv('r-salvamento', d.bombeiros.salvamento);
+  sv('r-resgate', d.bombeiros.resgate); sv('r-afogamento', d.bombeiros.afogamento);
+  sv('r-conducao-ps', d.bombeiros.conducaoPS);
+  ss('r-elaborado-por', r.elaboradoPor); ss('r-conferido-por', r.conferidoPor);
+  ss('r-email-remetente', r.emailRemetente); ss('r-obs', r.obs);
+  editandoId = id;
+  setEditMode(true);
+  goPage('novo-registro');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function confirmarExclusao(id) {
+  const r = _registrosCache.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('excluir-info').innerHTML =
+    `<strong>${fmtData(r.data)}</strong> · ${badgeTurno(r.turno)} · ${r.unidade}<br>
+     <span style="color:var(--cinza);font-size:0.78rem">Operador: ${r.operadorNome} · ${badgeStatus(r.status)}</span>`;
+  document.getElementById('btn-confirmar-excluir').onclick = () => excluirRegistro(id);
+  abrirModal('modal-excluir');
+}
+
+async function excluirRegistro(id) {
+  showLoading('Excluindo...');
+  const { error } = await sb.from('registros').delete().eq('id', id);
+  hideLoading();
+  if (error) { notif('Erro ao excluir registro.', 'error'); return; }
+  fecharModal('modal-excluir');
+  notif('Registro excluído com sucesso.', 'info');
+  if (currentPage === 'dashboard') await renderDashboard();
+  if (currentPage === 'admin') await renderAdmin();
+}
+
+async function salvarRegistro() {
+  const data    = document.getElementById('r-data').value;
+  const turno   = document.getElementById('r-turno').value;
+  const unidade = document.getElementById('r-unidade').value;
+  if (!data || !turno || !unidade) { notif('Preencha Data, Turno e Unidade.', 'error'); return; }
+
+  const g  = id => parseFloat(document.getElementById(id).value) || 0;
+  const gi = id => parseInt(document.getElementById(id).value)   || 0;
+  const gs = id => document.getElementById(id).value;
+
+  const payload = formParaDB(g, gi, gs, data, turno, unidade);
+
+  showLoading(editandoId ? 'Salvando alterações...' : 'Enviando registro...');
+
+  if (editandoId) {
+    const old = _registrosCache.find(x => x.id === editandoId);
+    const novoStatus = (old?.status === 'Validado' && currentUser.perfil === 'admin') ? 'Validado' : 'Pendente';
+    const { error } = await sb.from('registros').update({
+      ...payload,
+      status:      novoStatus,
+      editado_em:  new Date().toISOString(),
+      editado_por: currentUser.nome,
+    }).eq('id', editandoId);
+
+    hideLoading();
+    if (error) { notif('Erro ao atualizar registro: ' + error.message, 'error'); return; }
+    notif('Registro atualizado com sucesso!', 'success');
+    editandoId = null;
+    setEditMode(false);
+  } else {
+    // Checar duplicata para operador
+    if (currentUser.perfil !== 'admin') {
+      const { data: dup } = await sb.from('registros')
+        .select('id').eq('data', data).eq('turno', turno).eq('unidade', unidade).maybeSingle();
+      if (dup) { hideLoading(); notif('Já existe um registro para este turno/unidade/data.', 'error'); return; }
+    }
+
+    const { error } = await sb.from('registros').insert({
+      ...payload,
+      operador_id:   currentUser.id,
+      operador_nome: `${currentUser.posto} ${currentUser.nome}`,
+      status: 'Pendente',
+    });
+
+    hideLoading();
+    if (error) { notif('Erro ao salvar registro: ' + error.message, 'error'); return; }
+    notif('Registro do turno salvo! Aguardando validação.', 'success');
+  }
+
+  limparForm();
+  goPage('dashboard');
+}
+
+// ===================== RENDER =====================
+function badgeTurno(turno) {
+  const map = { '00:00 - 06:00': 'badge-00', '06:00 - 18:00': 'badge-06', '18:00 - 00:00': 'badge-18' };
+  return `<span class="badge ${map[turno] || ''}">${turno}</span>`;
+}
+function badgeStatus(status) {
+  const map = { 'Pendente': 'badge-pendente', 'Validado': 'badge-validado', 'Rejeitado': 'badge-rejeitado' };
+  return `<span class="badge ${map[status] || ''}">${status}</span>`;
+}
+function fmtData(d) {
+  if (!d) return '-';
+  const [y, m, dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+
+function renderTabelaRegistros(registros, container, adminView = false) {
+  const el = document.getElementById(container);
+  if (!registros.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Nenhum registro encontrado.</p></div>`;
+    return;
+  }
+  const s = (r, path) => { let v=r.dados; for(const p of path.split('.')) v=v?.[p]; return v||0; };
+  let rows = registros.map(r => {
+    const isAdmin    = currentUser.perfil === 'admin';
+    const isOwner    = r.operadorId === currentUser.id;
+    const validado   = r.status === 'Validado';
+    const podeEditar  = isAdmin || (!validado && isOwner);
+    const podeExcluir = isAdmin || (!validado && isOwner);
+    return `
+    <tr>
+      <td>${fmtData(r.data)}</td>
+      <td>${badgeTurno(r.turno)}</td>
+      <td>${r.unidade}</td>
+      <td>${r.operadorNome}</td>
+      <td>${s(r,'pessoas.presas')}</td>
+      <td>${s(r,'operacao.trafico')}</td>
+      <td>${s(r,'belico.armaPermitida')+s(r,'belico.armaRestrita')}</td>
+      <td>${badgeStatus(r.status)}</td>
+      <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="verDetalhes('${r.id}', ${adminView})">🔍</button>
+        ${podeEditar  ? `<button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;border-color:rgba(52,152,219,0.4);color:#3498db" onclick="editarRegistro('${r.id}')">✏️</button>` : ''}
+        ${podeExcluir ? `<button class="btn-danger" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="confirmarExclusao('${r.id}')">🗑️</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="registros-table">
+      <thead><tr>
+        <th>Data</th><th>Turno</th><th>Unidade</th><th>Operador</th>
+        <th>Presos</th><th>Tráfico</th><th>Armas</th><th>Status</th><th>Ações</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  `;
+}
+
+async function buscarRegistros() {
+  let query = sb.from('registros').select('*').order('data', { ascending: false });
+  if (currentUser.perfil !== 'admin') {
+    query = query.or(`operador_id.eq.${currentUser.id},unidade.eq.${currentUser.unidade}`);
+  }
+  const { data, error } = await query;
+  if (error) { notif('Erro ao buscar registros.', 'error'); return []; }
+  _registrosCache = (data || []).map(dbParaApp);
+  return _registrosCache;
+}
+
+async function renderDashboard() {
+  showLoading('Carregando dashboard...');
+  const all = await buscarRegistros();
+  hideLoading();
+  const today = new Date().toISOString().split('T')[0];
+  const todayRegs = all.filter(r => r.data === today);
+  const s = (r, path) => { let v=r.dados; for(const p of path.split('.')) v=v?.[p]; return parseFloat(v)||0; };
+  const totalPresos  = all.reduce((a,r) => a + s(r,'pessoas.presas'), 0);
+  const totalTrafico = all.reduce((a,r) => a + s(r,'operacao.trafico'), 0);
+  const pendentes    = all.filter(r => r.status === 'Pendente').length;
+  document.getElementById('dash-cards').innerHTML = `
+    <div class="dash-card" style="--cor-destaque:#c9a227">
+      <div class="label">Total de Registros</div>
+      <div class="value">${all.length}</div>
+      <div class="sub">${todayRegs.length} hoje</div>
+    </div>
+    <div class="dash-card" style="--cor-destaque:#e74c3c">
+      <div class="label">Pessoas Presas</div>
+      <div class="value">${totalPresos}</div>
+      <div class="sub">acumulado</div>
+    </div>
+    <div class="dash-card" style="--cor-destaque:#e67e22">
+      <div class="label">Oc. Tráfico</div>
+      <div class="value">${totalTrafico}</div>
+      <div class="sub">ocorrências</div>
+    </div>
+    <div class="dash-card" style="--cor-destaque:#f39c12">
+      <div class="label">Pendentes Validação</div>
+      <div class="value">${pendentes}</div>
+      <div class="sub">aguardando admin</div>
+    </div>
+  `;
+  renderHoje();
+}
+
+function renderHoje() {
+  const today = new Date().toISOString().split('T')[0];
+  renderTabelaRegistros(_registrosCache.filter(r => r.data === today), 'registros-hoje');
+}
+
+function renderSemana() {
+  const now = new Date();
+  const week = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    week.push(d.toISOString().split('T')[0]);
+  }
+  renderTabelaRegistros(_registrosCache.filter(r => week.includes(r.data)), 'registros-semana');
+}
+
+function renderTodos() {
+  const filtData   = document.getElementById('filtro-data').value;
+  const filtTurno  = document.getElementById('filtro-turno').value;
+  const filtStatus = document.getElementById('filtro-status').value;
+  let regs = [..._registrosCache];
+  if (filtData)   regs = regs.filter(r => r.data === filtData);
+  if (filtTurno)  regs = regs.filter(r => r.turno === filtTurno);
+  if (filtStatus) regs = regs.filter(r => r.status === filtStatus);
+  renderTabelaRegistros(regs, 'registros-todos');
+}
+
+async function renderAdmin() {
+  await renderPendentes();
+}
+
+async function renderPendentes() {
+  showLoading('Carregando pendentes...');
+  const { data, error } = await sb.from('registros').select('*').eq('status','Pendente').order('criado_em');
+  hideLoading();
+  const el = document.getElementById('lista-pendentes');
+  if (error || !data?.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>Nenhum registro pendente de validação.</p></div>`;
+    return;
+  }
+  const regs = data.map(dbParaApp);
+  // Atualiza cache com pendentes
+  regs.forEach(r => { if (!_registrosCache.find(x => x.id === r.id)) _registrosCache.push(r); });
+  const rows = regs.map(r => `
+    <tr>
+      <td>${fmtData(r.data)}</td>
+      <td>${badgeTurno(r.turno)}</td>
+      <td>${r.unidade}</td>
+      <td>${r.operadorNome}</td>
+      <td>${new Date(r.criadoEm).toLocaleString('pt-BR')}</td>
+      <td>
+        <button class="btn-secondary" style="padding:0.3rem 0.7rem;font-size:0.72rem;margin-right:4px" onclick="verDetalhes('${r.id}', true)">Detalhar</button>
+        <button class="btn-success" style="margin-right:4px" onclick="validar('${r.id}')">Validar</button>
+        <button class="btn-danger" onclick="rejeitar('${r.id}')">Rejeitar</button>
+      </td>
+    </tr>
+  `).join('');
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="registros-table">
+      <thead><tr><th>Data</th><th>Turno</th><th>Unidade</th><th>Operador</th><th>Enviado em</th><th>Ações</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  `;
+}
+
+async function renderUsuarios() {
+  showLoading('Carregando usuários...');
+  const { data, error } = await sb.from('usuarios').select('*').order('nome');
+  hideLoading();
+  _usuariosCache = data || [];
+  const el = document.getElementById('lista-usuarios');
+  if (error || !data?.length) { el.innerHTML = '<div class="empty-state"><p>Nenhum usuário encontrado.</p></div>'; return; }
+  const rows = data.map(u => {
+    const isMe = u.id === currentUser.id;
+    const acao = u.perfil === 'admin'
+      ? (isMe
+          ? `<td><span style="font-size:0.72rem;color:var(--cinza);font-style:italic">Sua conta</span></td>`
+          : `<td><button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="rebaixarUsuario('${u.id}')">↓ Rebaixar</button></td>`)
+      : `<td><button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="promoverUsuario('${u.id}')">↑ Tornar Admin</button></td>`;
+    return `
+    <tr>
+      <td>${u.matricula}</td>
+      <td>${u.nome}${isMe ? ' <span style="font-size:0.68rem;color:var(--dourado)">(você)</span>' : ''}</td>
+      <td>${u.posto}</td>
+      <td>${u.unidade}</td>
+      <td>${u.email}</td>
+      <td><span class="badge ${u.perfil === 'admin' ? 'badge-validado' : 'badge-pendente'}">${u.perfil}</span></td>
+      ${acao}
+    </tr>`;
+  }).join('');
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="registros-table">
+      <thead><tr><th>Matrícula</th><th>Nome</th><th>Posto</th><th>Unidade</th><th>E-mail</th><th>Perfil</th><th>Ação</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  `;
+}
+
+async function promoverUsuario(uid) {
+  const { error } = await sb.from('usuarios').update({ perfil: 'admin' }).eq('id', uid);
+  if (error) { notif('Erro ao promover usuário.', 'error'); return; }
+  const u = _usuariosCache.find(x => x.id === uid);
+  notif(`${u?.nome || 'Usuário'} promovido a Admin.`, 'success');
+  renderUsuarios();
+}
+
+async function rebaixarUsuario(uid) {
+  if (uid === currentUser.id) { notif('Você não pode rebaixar sua própria conta.', 'error'); return; }
+  const { error } = await sb.from('usuarios').update({ perfil: 'operador' }).eq('id', uid);
+  if (error) { notif('Erro ao rebaixar usuário.', 'error'); return; }
+  const u = _usuariosCache.find(x => x.id === uid);
+  notif(`${u?.nome || 'Usuário'} rebaixado para Operador.`, 'info');
+  renderUsuarios();
+}
+
+function toggleAdmin(uid) { promoverUsuario(uid); }
+
+function verDetalhes(id, adminView) {
+  const r = _registrosCache.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modal-titulo').textContent = `Registro · ${fmtData(r.data)} · ${r.turno}`;
+  const d = r.dados;
+  const row = (label, val) => `<div class="detail-row"><span class="d-label">${label}</span><span class="d-val">${val ?? 0}</span></div>`;
+  const sec = (t) => `<div class="detail-section">${t}</div>`;
+  const s = (obj, key) => (obj?.[key] ?? 0);
+  document.getElementById('modal-conteudo').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-row" style="grid-column:span 2"><span class="d-label">Unidade</span><span class="d-val">${r.unidade}</span></div>
+      <div class="detail-row"><span class="d-label">Operador</span><span class="d-val">${r.operadorNome}</span></div>
+      <div class="detail-row"><span class="d-label">Status</span><span class="d-val">${badgeStatus(r.status)}</span></div>
+      ${r.elaboradoPor ? `<div class="detail-row"><span class="d-label">Elaborado por</span><span class="d-val">${r.elaboradoPor}</span></div>` : ''}
+      ${r.conferidoPor ? `<div class="detail-row"><span class="d-label">Conferido por</span><span class="d-val">${r.conferidoPor}</span></div>` : ''}
+      ${sec('🔵 OPERAÇÃO')}
+      ${row('Pessoas abordadas', s(d.operacao,'abordadas'))} ${row('Estab. comerciais', s(d.operacao,'estabCom'))}
+      ${row('Ocorr. ao DP', s(d.operacao,'ocorrDP'))} ${row('BOPM lavrados', s(d.operacao,'bopm'))}
+      ${row('RAIA conf.', s(d.operacao,'raia'))} ${row('Mandado B/A', s(d.operacao,'mandado'))}
+      ${row('Ato Infracional', s(d.operacao,'atoInfracional'))} ${row('Crime Exc. Tráfico', s(d.operacao,'crimeExc'))}
+      ${row('Tráfico', s(d.operacao,'trafico'))}
+      ${sec('👤 PESSOAS')}
+      ${row('Presas', s(d.pessoas,'presas'))} ${row('Adol. Sindicados', s(d.pessoas,'adolSindicados'))}
+      ${row('Adol. Apreendidos', s(d.pessoas,'adolApreendidos'))} ${row('Procurados', s(d.pessoas,'procurados'))}
+      ${row('Manifestantes', s(d.pessoas,'manifestantes'))}
+      ${sec('⚠️ DROGAS')}
+      ${row('Cocaína (Kg)', s(d.drogas,'cocaina'))} ${row('Crack (Kg)', s(d.drogas,'crack'))}
+      ${row('Maconha (Kg)', s(d.drogas,'maconha'))} ${row('Heroína (Kg)', s(d.drogas,'heroina'))}
+      ${row('Outra Droga (Kg)', s(d.drogas,'outraDrogaKg'))} ${row('Outra Droga (Qtde)', s(d.drogas,'outraDrogaQtde'))}
+      ${sec('🔫 MATERIAL BÉLICO')}
+      ${row('Arma Branca', s(d.belico,'armaBranca'))} ${row('Arma Fogo Perm.', s(d.belico,'armaPermitida'))}
+      ${row('Arma Fogo Rest.', s(d.belico,'armaRestrita'))} ${row('Munição Perm.', s(d.belico,'municaoPermitida'))}
+      ${row('Munição Rest.', s(d.belico,'municaoRestrita'))} ${row('Explosivo', s(d.belico,'explosivo'))}
+      ${row('Outro Bélico', s(d.belico,'outroBelico'))}
+      ${sec('📦 APREENSÕES')}
+      ${row('Moedas (R$)', s(d.apreensoes,'moedas'))} ${row('Medicamento', s(d.apreensoes,'medicamento'))}
+      ${row('Cigarro', s(d.apreensoes,'cigarro'))} ${row('Eletrônico', s(d.apreensoes,'eletronico'))}
+      ${row('Prod. Químico', s(d.apreensoes,'quimico'))} ${row('Descaminho', s(d.apreensoes,'descaminho'))}
+      ${row('Outros', s(d.apreensoes,'outrosApreensao'))}
+      ${sec('🚗 TRÂNSITO')}
+      ${row('Acid. s/ Vítima', s(d.transito,'acidenteSemVitima'))} ${row('Acid. c/ Vítima', s(d.transito,'acidenteComVitima'))}
+      ${row('Vítima Não Fatal', s(d.transito,'vtimaNaoFatal'))} ${row('Vítima Fatal', s(d.transito,'vtimaFatal'))}
+      ${row('AIT Demais', s(d.transito,'aitDemais'))} ${row('AIT 165', s(d.transito,'ait165'))}
+      ${row('AIT 165-A', s(d.transito,'ait165a'))} ${row('AIT 228', s(d.transito,'ait228'))}
+      ${row('AIT 253-A', s(d.transito,'ait253a'))} ${row('Bloqueios', s(d.transito,'bloqueios'))}
+      ${row('Pontos Visib.', s(d.transito,'pontosVis'))} ${row('Condutores', s(d.transito,'condutores'))}
+      ${row('Bafômetro', s(d.transito,'bafometro'))} ${row('Flagrante 306', s(d.transito,'flagrante306'))}
+      ${row('CLA', s(d.transito,'cla'))} ${row('CNH', s(d.transito,'cnh'))} ${row('Outro Doc.', s(d.transito,'docApreend'))}
+      ${sec('🚘 VEÍC. FISCALIZADO')}
+      ${row('Auto', s(d.veicFiscalizado,'auto'))} ${row('Moto', s(d.veicFiscalizado,'moto'))}
+      ${row('Coletivo', s(d.veicFiscalizado,'coletivo'))} ${row('Carga', s(d.veicFiscalizado,'carga'))} ${row('Outro', s(d.veicFiscalizado,'outro'))}
+      ${sec('🚘 VEÍC. REMOVIDO')}
+      ${row('Auto', s(d.veicRemovido,'auto'))} ${row('Moto', s(d.veicRemovido,'moto'))}
+      ${row('Coletivo', s(d.veicRemovido,'coletivo'))} ${row('Carga', s(d.veicRemovido,'carga'))} ${row('Outro', s(d.veicRemovido,'outro'))}
+      ${sec('🚘 VEÍC. LOCALIZADO')}
+      ${row('Auto', s(d.veicLocalizado,'auto'))} ${row('Moto', s(d.veicLocalizado,'moto'))}
+      ${row('Coletivo', s(d.veicLocalizado,'coletivo'))} ${row('Carga', s(d.veicLocalizado,'carga'))} ${row('Outro', s(d.veicLocalizado,'outro'))}
+      ${sec('🚒 BOMBEIROS')}
+      ${row('Incêndio', s(d.bombeiros,'incendio'))} ${row('Salvamento', s(d.bombeiros,'salvamento'))}
+      ${row('Resgate', s(d.bombeiros,'resgate'))} ${row('Afogamento', s(d.bombeiros,'afogamento'))} ${row('Condução PS', s(d.bombeiros,'conducaoPS'))}
+      ${r.obs ? `<div class="detail-row" style="grid-column:span 2"><span class="d-label">Observações</span><span class="d-val">${r.obs}</span></div>` : ''}
+    </div>
+  `;
+  const acoes = document.getElementById('modal-acoes');
+  if (adminView && currentUser.perfil === 'admin' && r.status === 'Pendente') {
+    acoes.innerHTML = `
+      <button class="btn-danger" onclick="rejeitar('${r.id}');fecharModal('modal-detalhe')">Rejeitar</button>
+      <button class="btn-success" onclick="validar('${r.id}');fecharModal('modal-detalhe')">Validar Registro</button>
+    `;
+  } else {
+    acoes.innerHTML = '';
+  }
+  abrirModal('modal-detalhe');
+}
+
+async function validar(id) {
+  const { error } = await sb.from('registros').update({
+    status: 'Validado',
+    validado_em: new Date().toISOString(),
+    validado_por: currentUser.nome,
+  }).eq('id', id);
+  if (error) { notif('Erro ao validar.', 'error'); return; }
+  // Atualiza cache local
+  const r = _registrosCache.find(x => x.id === id);
+  if (r) { r.status = 'Validado'; r.validadoPor = currentUser.nome; r.validadoEm = new Date().toISOString(); }
+  notif('Registro validado com sucesso.', 'success');
+  await renderAdmin();
+  if (currentPage === 'dashboard') await renderDashboard();
+}
+
+async function rejeitar(id) {
+  const { error } = await sb.from('registros').update({
+    status: 'Rejeitado',
+    validado_em: new Date().toISOString(),
+    validado_por: currentUser.nome,
+  }).eq('id', id);
+  if (error) { notif('Erro ao rejeitar.', 'error'); return; }
+  const r = _registrosCache.find(x => x.id === id);
+  if (r) { r.status = 'Rejeitado'; r.validadoPor = currentUser.nome; }
+  notif('Registro rejeitado.', 'error');
+  await renderAdmin();
+  if (currentPage === 'dashboard') await renderDashboard();
+}
+
+// ===================== EXPORTAR PLANILHA =====================
+function abrirModalExportar() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('export-data').value = today;
+  atualizarPreviewExport();
+  document.getElementById('export-data').addEventListener('change', atualizarPreviewExport);
+  document.getElementById('export-unidade').addEventListener('change', atualizarPreviewExport);
+  abrirModal('modal-exportar');
+}
+
+function atualizarPreviewExport() {
+  const data    = document.getElementById('export-data').value;
+  const unidade = document.getElementById('export-unidade').value;
+  if (!data) { document.getElementById('export-preview').style.display = 'none'; return; }
+  const regs = _registrosCache.filter(r => r.data === data && (unidade === '' || r.unidade === unidade));
+  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
+  const preview = document.getElementById('export-preview');
+  if (!regs.length) {
+    preview.style.display = 'block';
+    preview.innerHTML = `<span style="color:#e74c3c">Nenhum registro encontrado para essa data/unidade.</span>`;
+    return;
+  }
+  let html = `<strong style="color:var(--dourado-claro)">Registros encontrados:</strong><br><br>`;
+  turnos.forEach(t => {
+    const r = regs.filter(x => x.turno === t);
+    const status = r.length ? r.map(x => `<span class="badge ${x.status==='Validado'?'badge-validado':x.status==='Rejeitado'?'badge-rejeitado':'badge-pendente'}">${x.status}</span>`).join(' ') : '<span style="opacity:0.4">sem lançamento</span>';
+    html += `<div style="display:flex;justify-content:space-between;padding:2px 0">${t} &nbsp; ${status}</div>`;
+  });
+  preview.style.display = 'block';
+  preview.innerHTML = html;
+}
+
+function somarDados(registros) {
+  const sum = (field) => registros.reduce((acc, r) => {
+    const parts = field.split('.');
+    let val = r.dados;
+    for (const p of parts) val = val?.[p];
+    return acc + (parseFloat(val) || 0);
+  }, 0);
+  return {
+    // OPERAÇÃO
+    abordadas:      sum('operacao.abordadas'),
+    estabCom:       sum('operacao.estabCom'),
+    ocorrDP:        sum('operacao.ocorrDP'),
+    bopm:           sum('operacao.bopm'),
+    raia:           sum('operacao.raia'),
+    mandado:        sum('operacao.mandado'),
+    atoInfracional: sum('operacao.atoInfracional'),
+    crimeExc:       sum('operacao.crimeExc'),
+    trafico:        sum('operacao.trafico'),
+    // PESSOAS
+    presas:          sum('pessoas.presas'),
+    adolSindicados:  sum('pessoas.adolSindicados'),
+    adolApreendidos: sum('pessoas.adolApreendidos'),
+    procurados:      sum('pessoas.procurados'),
+    manifestantes:   sum('pessoas.manifestantes'),
+    // DROGAS
+    cocaina:        sum('drogas.cocaina'),
+    crack:          sum('drogas.crack'),
+    maconha:        sum('drogas.maconha'),
+    heroina:        sum('drogas.heroina'),
+    outraDrogaKg:   sum('drogas.outraDrogaKg'),
+    outraDrogaQtde: sum('drogas.outraDrogaQtde'),
+    // BÉLICO
+    armaBranca:       sum('belico.armaBranca'),
+    armaPermitida:    sum('belico.armaPermitida'),
+    armaRestrita:     sum('belico.armaRestrita'),
+    municaoPermitida: sum('belico.municaoPermitida'),
+    municaoRestrita:  sum('belico.municaoRestrita'),
+    explosivo:        sum('belico.explosivo'),
+    outroBelico:      sum('belico.outroBelico'),
+    // APREENSÕES
+    moedas:          sum('apreensoes.moedas'),
+    medicamento:     sum('apreensoes.medicamento'),
+    cigarro:         sum('apreensoes.cigarro'),
+    eletronico:      sum('apreensoes.eletronico'),
+    quimico:         sum('apreensoes.quimico'),
+    descaminho:      sum('apreensoes.descaminho'),
+    outrosApreensao: sum('apreensoes.outrosApreensao'),
+    // TRÂNSITO
+    acidenteSemVitima: sum('transito.acidenteSemVitima'),
+    acidenteComVitima: sum('transito.acidenteComVitima'),
+    vtimaNaoFatal:     sum('transito.vtimaNaoFatal'),
+    vtimaFatal:        sum('transito.vtimaFatal'),
+    aitDemais:         sum('transito.aitDemais'),
+    ait165:            sum('transito.ait165'),
+    ait165a:           sum('transito.ait165a'),
+    ait228:            sum('transito.ait228'),
+    ait253a:           sum('transito.ait253a'),
+    bloqueios:         sum('transito.bloqueios'),
+    pontosVis:         sum('transito.pontosVis'),
+    condutores:        sum('transito.condutores'),
+    bafometro:         sum('transito.bafometro'),
+    flagrante306:      sum('transito.flagrante306'),
+    cla:               sum('transito.cla'),
+    cnh:               sum('transito.cnh'),
+    docApreend:        sum('transito.docApreend'),
+    // VEÍCULO FISCALIZADO
+    vfAuto:     sum('veicFiscalizado.auto'),
+    vfMoto:     sum('veicFiscalizado.moto'),
+    vfColetivo: sum('veicFiscalizado.coletivo'),
+    vfCarga:    sum('veicFiscalizado.carga'),
+    vfOutro:    sum('veicFiscalizado.outro'),
+    // VEÍCULO REMOVIDO
+    vrAuto:     sum('veicRemovido.auto'),
+    vrMoto:     sum('veicRemovido.moto'),
+    vrColetivo: sum('veicRemovido.coletivo'),
+    vrCarga:    sum('veicRemovido.carga'),
+    vrOutro:    sum('veicRemovido.outro'),
+    // VEÍCULO LOCALIZADO
+    vlAuto:     sum('veicLocalizado.auto'),
+    vlMoto:     sum('veicLocalizado.moto'),
+    vlColetivo: sum('veicLocalizado.coletivo'),
+    vlCarga:    sum('veicLocalizado.carga'),
+    vlOutro:    sum('veicLocalizado.outro'),
+    // BOMBEIROS
+    incendio:   sum('bombeiros.incendio'),
+    salvamento: sum('bombeiros.salvamento'),
+    resgate:    sum('bombeiros.resgate'),
+    afogamento: sum('bombeiros.afogamento'),
+    conducaoPS: sum('bombeiros.conducaoPS'),
+  };
+}
+
+function exportarPlanilha() {
+  const data    = document.getElementById('export-data').value;
+  const unidade = document.getElementById('export-unidade').value;
+  if (!data) { notif('Selecione uma data.', 'error'); return; }
+
+  const todos = _registrosCache.filter(r => r.data === data && (unidade === '' || r.unidade === unidade));
+  if (!todos.length) { notif('Nenhum registro encontrado para exportar.', 'error'); return; }
+
+  const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
+  const dadosPorTurno = turnos.map(t => {
+    const regs = todos.filter(r => r.turno === t);
+    return regs.length ? somarDados(regs) : null;
+  });
+  const T = somarDados(todos);
+
+  const elaborados = todos.map(r => r.elaboradoPor).filter(Boolean).join('; ') || '';
+  const conferidos = todos.map(r => r.conferidoPor).filter(Boolean).join('; ') || '';
+  const emails     = todos.map(r => r.emailRemetente).filter(Boolean).join('; ') || '';
+
+  const [y, m, d] = data.split('-');
+  const dataExib  = `${d}/${m}/${y}`;
+  const unidLabel = unidade || '32º BPM/I - Todas as Unidades';
+
+  const col = campo => [T[campo]||0, ...dadosPorTurno.map(dt => dt ? (dt[campo]||0) : '')];
+  const R   = (label, campo) => [label, ...col(campo)];
+  const H   = label           => [label, '', '', '', ''];
+
+  const ws_data = [
+    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO','','','',''],
+    ['COORDENAÇÃO OPERACIONAL PM','','','',''],
+    ['OPERAÇÃO IMPACTO','','','',''],
+    ['','','','',''],
+    ['PLANILHA DE RESULTADOS','','','',''],
+    ['','','','',''],
+    [`Nome da Unidade: ${unidLabel}`,'','','',''],
+    ['','','','',''],
+    [dataExib,'00:00 AS 23:59 (TOTAL)',...turnos],
+    H('OPERAÇÃO'),
+    R('Pessoas abordadas (exc. Condutores)','abordadas'),
+    R('Estabelecimentos comerciais fiscalizados','estabCom'),
+    R('Ocorr. ao DP s/ BOPC','ocorrDP'),
+    R('Qtde BOPM lavrados','bopm'),
+    R('Qtde RAIA conf.','raia'),
+    R('Mandado de Busca/Apreensão cumpridos','mandado'),
+    R('Ato Infracional','atoInfracional'),
+    R('Crime Exc. Tráfico','crimeExc'),
+    R('Tráfico de entorpecentes','trafico'),
+    H('PESSOAS'),
+    R('Pessoas Presas','presas'),
+    R('Adolesc. Sindicados','adolSindicados'),
+    R('Adolesc. Apreendidos','adolApreendidos'),
+    R('Procurados','procurados'),
+    R('Manifestantes','manifestantes'),
+    H('DROGAS'),
+    R('Cocaína (em Kg)','cocaina'),
+    R('Crack (em Kg)','crack'),
+    R('Maconha (em Kg)','maconha'),
+    R('Heroína (em Kg)','heroina'),
+    R('Outra Droga (em Kg)','outraDrogaKg'),
+    R('Outra Droga (em Qtde)','outraDrogaQtde'),
+    H('MATERIAL BÉLICO'),
+    R('Arma Branca','armaBranca'),
+    R('Arma Fogo (Cal. Permitido)','armaPermitida'),
+    R('Arma Fogo (Cal. Restrito)','armaRestrita'),
+    R('Munição (Cal. Permitido)','municaoPermitida'),
+    R('Munição (Cal. Restrito)','municaoRestrita'),
+    R('Explosivo/Detonador','explosivo'),
+    R('Outro Mat. Bélico','outroBelico'),
+    H('APREENSÕES'),
+    R('Moedas (Valor em R$)','moedas'),
+    R('Medicamento','medicamento'),
+    R('Cigarro','cigarro'),
+    R('Eqpto Eletrônico','eletronico'),
+    R('Prod. Químico','quimico'),
+    R('Descaminho','descaminho'),
+    R('Outros Tipos Apreensão','outrosApreensao'),
+    H('TRÂNSITO (URBANO)'),
+    R('Acidentes de Trânsito SEM Vítima','acidenteSemVitima'),
+    R('Acidente COM Vítima','acidenteComVitima'),
+    R('Vítima NÃO Fatal','vtimaNaoFatal'),
+    R('Vítima FATAL','vtimaFatal'),
+    R('AIT (Exceto Artigo (165/165-A/228 e 253A)','aitDemais'),
+    R('AIT Art.165 CTB','ait165'),
+    R('AIT Art.165-A CTB','ait165a'),
+    R('AIT Art.228 CTB','ait228'),
+    R('AIT Art.253-A CTB','ait253a'),
+    R('Bloqueios','bloqueios'),
+    R('Pontos de Visibilidade','pontosVis'),
+    R('Condutores Fiscalizados','condutores'),
+    R('Teste Etilômetro Realizado','bafometro'),
+    R('Flagrante Art. 306 CTB','flagrante306'),
+    R('CLA Apreendido','cla'),
+    R('CNH Apreendido','cnh'),
+    R('Outro Documento Apreendido','docApreend'),
+    H('VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)'),
+    R('Auto','vfAuto'),
+    R('Moto','vfMoto'),
+    R('Coletivo','vfColetivo'),
+    R('Veículo de Carga','vfCarga'),
+    R('Outro tipo de Veículo','vfOutro'),
+    H('VEÍCULO REMOVIDO'),
+    R('Auto','vrAuto'),
+    R('Moto','vrMoto'),
+    R('Coletivo','vrColetivo'),
+    R('Veículo de Carga','vrCarga'),
+    R('Outro tipo de Veículo','vrOutro'),
+    H('VEÍCULO LOCALIZADO'),
+    R('Auto','vlAuto'),
+    R('Moto','vlMoto'),
+    R('Coletivo','vlColetivo'),
+    R('Veículo de Carga','vlCarga'),
+    R('Outro tipo de Veículo','vlOutro'),
+    H('BOMBEIROS'),
+    R('Incêndio','incendio'),
+    R('Salvamento','salvamento'),
+    R('Resgate','resgate'),
+    R('Afogamento (fatal)','afogamento'),
+    R('Condução ao PS / hospital','conducaoPS'),
+    ['','','','',''],
+    [`Elaborado por: ${elaborados}`,'','','',''],
+    [`Conferido por: ${conferidos}`,'','','',''],
+    [`e-mail remetente: ${emails}`,'','','',''],
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{ wch:46 },{ wch:20 },{ wch:16 },{ wch:16 },{ wch:16 }];
+
+  // section row indices (0-based): OPERAÇÃO=9, PESSOAS=19, DROGAS=25, BÉLICO=32, APREENSÕES=40,
+  // TRÂNSITO=48, VF=66, VR=72, VL=78, BOMBEIROS=84
+  const secRows  = new Set([9,19,25,32,40,48,66,72,78,84]);
+  const headRows = new Set([0,1,2,4,6]);
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let ri = range.s.r; ri <= range.e.r; ri++) {
+    for (let ci = range.s.c; ci <= range.e.c; ci++) {
+      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws[addr]) continue;
+      if (headRows.has(ri)) {
+        ws[addr].s = { font:{ bold:true, sz: ri===0?13:11, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
+      } else if (ri === 8) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
+      } else if (secRows.has(ri)) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
+      } else if (ci === 0) {
+        ws[addr].s = { font:{ sz:10 }, fill:{ fgColor:{ rgb:'F0F4FF' } } };
+      } else if (ci === 1) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'0A1628' } }, fill:{ fgColor:{ rgb:'C9A227' } }, alignment:{ horizontal:'center' } };
+      } else {
+        ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
+      }
+    }
+  }
+
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}},
+    {s:{r:2,c:0},e:{r:2,c:4}},{s:{r:4,c:0},e:{r:4,c:4}},
+    {s:{r:6,c:0},e:{r:6,c:4}},
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Resultado IMPACTO');
+  const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
+  const filename = `IMPACTO_${data}_${safeUnid}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  notif(`Planilha "${filename}" baixada com sucesso.`, 'success');
+  fecharModal('modal-exportar');
+}
+
+// ===================== MODAL =====================
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ===================== NOTIF =====================
+function notif(msg, tipo = 'info') {
+  const el = document.createElement('div');
+  el.className = `notif ${tipo}`;
+  el.textContent = msg;
+  document.getElementById('notif-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
