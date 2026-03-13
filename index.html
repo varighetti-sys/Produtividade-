@@ -2,8 +2,21 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Operação Impacto - PMESP</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Op. Impacto">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Sistema de registro de turnos da Operação Impacto - PMESP">
+
+<!-- Ícones PWA para iOS (inline SVG como data URI) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a1628'/%3E%3Ccircle cx='256' cy='256' r='220' fill='none' stroke='%23c9a227' stroke-width='18'/%3E%3Cpolygon points='256,80 290,180 400,180 315,240 345,340 256,280 167,340 197,240 112,180 222,180' fill='%23c9a227'/%3E%3Ctext x='256' y='420' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='52' fill='%23c9a227'%3EPMESP%3C/text%3E%3C/svg%3E">
+
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -2253,7 +2266,72 @@ function exportarPlanilha() {
   fecharModal('modal-exportar');
 }
 
-// ===================== MODAL =====================
+// ===================== PWA - SERVICE WORKER =====================
+// Só ativa em produção (não no preview do Claude)
+const _isProd = location.hostname !== 'www.claudeusercontent.com'
+             && location.protocol === 'https:';
+
+if ('serviceWorker' in navigator && _isProd) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('[PWA] Service Worker registrado'))
+      .catch(e => console.warn('[PWA] Service Worker falhou:', e));
+  });
+}
+
+// Banner de instalação PWA
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostra o banner apenas se o usuário estiver logado
+  if (currentUser) mostrarBannerInstalar();
+});
+
+function mostrarBannerInstalar() {
+  if (document.getElementById('pwa-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
+    background:#122040;border:1px solid rgba(201,162,39,0.4);
+    border-radius:8px;padding:0.9rem 1.2rem;
+    display:flex;align-items:center;gap:1rem;
+    z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.4);
+    max-width:380px;width:calc(100% - 2rem);
+    animation:slideUp 0.3s ease;
+  `;
+  banner.innerHTML = `
+    <style>@keyframes slideUp{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}</style>
+    <div style="font-size:1.8rem">📲</div>
+    <div style="flex:1">
+      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--dourado);font-size:0.95rem">Instalar como App</div>
+      <div style="font-size:0.75rem;color:var(--cinza);margin-top:2px">Acesse sem abrir o navegador</div>
+    </div>
+    <button onclick="instalarPWA()" style="background:var(--dourado);color:#0a1628;border:none;
+      padding:0.5rem 1rem;font-family:'Rajdhani',sans-serif;font-weight:700;
+      font-size:0.85rem;border-radius:4px;cursor:pointer;white-space:nowrap">
+      Instalar
+    </button>
+    <button onclick="document.getElementById('pwa-banner').remove()" style="background:none;
+      border:none;color:var(--cinza);font-size:1.2rem;cursor:pointer;padding:0.2rem 0.4rem">
+      ✕
+    </button>
+  `;
+  document.body.appendChild(banner);
+  // Remove automaticamente após 15 segundos
+  setTimeout(() => banner?.remove(), 15000);
+}
+
+async function instalarPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') notif('App instalado com sucesso! 🎉', 'success');
+  deferredPrompt = null;
+  document.getElementById('pwa-banner')?.remove();
+}
+
 function abrirModal(id) { document.getElementById(id).classList.add('open'); }
 function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m => {
