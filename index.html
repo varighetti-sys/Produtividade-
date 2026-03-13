@@ -905,11 +905,105 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ===================== SUPABASE CONFIG =====================
-// ⚠️ Substitua pelos valores do seu projeto em: supabase.com → Project Settings → API
-const SUPABASE_URL  = 'https://pahuwyialgafhxgrlehm.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_QQZL_V5TyLiTK6ctdW1AbA_RaEttn0w';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// =====================================================================
+// ⚙️  CONFIGURAÇÃO SUPABASE — edite as 2 linhas abaixo
+//     Onde encontrar: supabase.com → seu projeto → Settings → API
+// =====================================================================
+const SUPABASE_URL = 'https://pahuwyialgafhxgrlehm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhaHV3eWlhbGdhZmh4Z3JsZWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzOTE3MzUsImV4cCI6MjA4ODk2NzczNX0.ECKVNz5aoWpnIS9SzHXhwrfGYj0tizJcoFQUgVNnbbA';
+// =====================================================================
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  }
+});
+
+// ===================== DIAGNÓSTICO INICIAL =====================
+// Verifica credenciais e conectividade ao carregar a página
+async function diagnosticar() {
+  // Credenciais ainda são padrão?
+  if (SUPABASE_URL.includes('SEU_PROJECT_ID') || SUPABASE_KEY.includes('SUA_ANON')) {
+    mostrarTelaDiagnostico('credenciais');
+    return false;
+  }
+  // Testa conexão real com o banco
+  try {
+    const { error } = await sb.from('usuarios').select('id').limit(1);
+    if (error) {
+      mostrarTelaDiagnostico('conexao', error.message);
+      return false;
+    }
+  } catch(e) {
+    mostrarTelaDiagnostico('rede', e.message);
+    return false;
+  }
+  return true;
+}
+
+function mostrarTelaDiagnostico(tipo, detalhe = '') {
+  const msgs = {
+    credenciais: {
+      icon: '🔑',
+      titulo: 'Credenciais não configuradas',
+      corpo: `
+        <p>Abra o arquivo <code>operacao_impacto.html</code> num editor de texto e substitua:</p>
+        <div class="diag-code">const SUPABASE_URL = '<strong>https://xxxx.supabase.co</strong>';<br>const SUPABASE_KEY = '<strong>eyJhbGci...sua_chave</strong>';</div>
+        <p style="margin-top:1rem"><strong>Onde encontrar:</strong></p>
+        <ol style="margin-left:1.2rem;line-height:2">
+          <li>Acesse <a href="https://supabase.com" target="_blank" style="color:var(--dourado)">supabase.com</a> → seu projeto</li>
+          <li>Clique em <strong>Settings</strong> (ícone de engrenagem)</li>
+          <li>Clique em <strong>API</strong></li>
+          <li>Copie a <strong>Project URL</strong> e a chave <strong>anon / public</strong></li>
+        </ol>`,
+    },
+    conexao: {
+      icon: '🔌',
+      titulo: 'Erro de conexão com o banco',
+      corpo: `
+        <p>As credenciais foram encontradas mas o banco retornou erro:</p>
+        <div class="diag-code">${detalhe}</div>
+        <p style="margin-top:1rem"><strong>Possíveis causas:</strong></p>
+        <ul style="margin-left:1.2rem;line-height:2">
+          <li>O script SQL ainda não foi executado no Supabase (SQL Editor → cole o supabase_setup.sql)</li>
+          <li>A chave copiada é a <strong>service_role</strong> em vez da <strong>anon/public</strong></li>
+          <li>O projeto Supabase está pausado (plano gratuito pausa após inatividade)</li>
+          <li>RLS habilitado mas sem políticas — execute novamente o script SQL completo</li>
+        </ul>`,
+    },
+    rede: {
+      icon: '🌐',
+      titulo: 'Erro de rede / CORS',
+      corpo: `
+        <p>Não foi possível alcançar o servidor Supabase.</p>
+        <div class="diag-code">${detalhe}</div>
+        <p style="margin-top:1rem"><strong>Verifique:</strong></p>
+        <ul style="margin-left:1.2rem;line-height:2">
+          <li>Se você está abrindo o arquivo direto (file://), tente usar um servidor local como o <strong>Live Server</strong> do VS Code</li>
+          <li>Sua conexão com a internet está funcionando</li>
+          <li>O domínio do arquivo está na lista de <strong>Allowed Origins</strong> no Supabase (Settings → API → CORS)</li>
+        </ul>`,
+    },
+  };
+  const m = msgs[tipo];
+  document.body.innerHTML = `
+    <style>
+      body{background:#0a1628;color:#d0daf0;font-family:'Exo 2',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+      .diag-card{background:#122040;border:1px solid rgba(201,162,39,0.3);padding:2.5rem;max-width:640px;width:100%;border-radius:4px}
+      .diag-card h2{font-family:'Rajdhani',sans-serif;color:#c9a227;font-size:1.5rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
+      .diag-card p{font-size:.9rem;line-height:1.7;margin-bottom:.5rem;color:#b0bcd0}
+      .diag-code{background:#060e1f;border:1px solid rgba(201,162,39,.2);padding:.75rem 1rem;font-family:monospace;font-size:.82rem;color:#e8c050;margin:.75rem 0;word-break:break-all;border-radius:2px}
+      ol,ul{color:#8a9bb5;font-size:.88rem}
+      .diag-btn{margin-top:1.5rem;background:#c9a227;border:none;color:#0a1628;padding:.75rem 2rem;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:.08em;border-radius:2px}
+    </style>
+    <div class="diag-card">
+      <h2>${m.icon} ${m.titulo}</h2>
+      ${m.corpo}
+      <button class="diag-btn" onclick="location.reload()">↺ Tentar novamente</button>
+    </div>`;
+}
 
 // ===================== STATE =====================
 let currentUser = null;
@@ -917,7 +1011,7 @@ let currentPage = 'login';
 let currentTab  = 'tab-hoje';
 let currentAdminTab = 'admin-pendentes';
 let editandoId  = null;
-let _registrosCache = [];  // cache local para exportação e detalhes
+let _registrosCache = [];
 let _usuariosCache  = [];
 
 // ===================== LOADING OVERLAY =====================
@@ -1081,27 +1175,44 @@ function toggleCadastro() {
 }
 
 async function fazerLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const senha = document.getElementById('login-senha').value;
-  if (!email || !senha) { notif('Preencha todos os campos.', 'error'); return; }
+  const entrada = document.getElementById('login-email').value.trim();
+  const senha   = document.getElementById('login-senha').value;
+  if (!entrada || !senha) { notif('Preencha todos os campos.', 'error'); return; }
 
   showLoading('Autenticando...');
   try {
-    // Permite login por matrícula: busca e-mail correspondente
-    let loginEmail = email;
-    if (!email.includes('@')) {
-      const { data: u } = await sb.from('usuarios').select('email').eq('matricula', email).single();
-      if (!u) { hideLoading(); notif('Matrícula não encontrada.', 'error'); return; }
+    let loginEmail = entrada;
+
+    // Login por matrícula: busca e-mail sem exigir auth (usando service ou anon com RLS público em select)
+    if (!entrada.includes('@')) {
+      const { data: u, error: eu } = await sb
+        .from('usuarios').select('email').eq('matricula', entrada).maybeSingle();
+      if (eu || !u) {
+        hideLoading();
+        notif('Matrícula não encontrada. Tente com seu e-mail.', 'error');
+        return;
+      }
       loginEmail = u.email;
     }
 
     const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password: senha });
-    if (error) { hideLoading(); notif('Credenciais inválidas.', 'error'); return; }
+    if (error) {
+      hideLoading();
+      // Mensagens de erro traduzidas
+      const erros = {
+        'Invalid login credentials': 'E-mail/matrícula ou senha incorretos.',
+        'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
+        'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
+      };
+      notif(erros[error.message] || error.message, 'error');
+      return;
+    }
 
     await carregarPerfil(data.user.id);
   } catch(e) {
     hideLoading();
-    notif('Erro ao conectar. Verifique sua conexão.', 'error');
+    console.error('[Login]', e);
+    notif('Erro de conexão. Verifique o console (F12).', 'error');
   }
 }
 
@@ -1113,50 +1224,113 @@ async function fazerCadastro() {
   const email   = document.getElementById('cad-email').value.trim();
   const senha   = document.getElementById('cad-senha').value;
 
-  if (!nome || !mat || !posto || !unidade || !email || !senha) { notif('Preencha todos os campos.', 'error'); return; }
+  if (!nome || !mat || !posto || !unidade || !email || !senha) {
+    notif('Preencha todos os campos.', 'error'); return;
+  }
   if (senha.length < 6) { notif('Senha deve ter ao menos 6 caracteres.', 'error'); return; }
 
   showLoading('Criando conta...');
   try {
-    const { data, error } = await sb.auth.signUp({
+    // 1. Criar usuário no Supabase Auth
+    const { data: authData, error: authError } = await sb.auth.signUp({
       email, password: senha,
-      options: { data: { nome, matricula: mat, posto, unidade, perfil: 'operador' } }
+      options: { data: { nome, matricula: mat, posto, unidade } }
     });
-    if (error) { hideLoading(); notif(error.message, 'error'); return; }
 
-    // O trigger fn_criar_usuario_perfil cria o registro em usuarios automaticamente.
-    // Buscamos o perfil criado.
-    await carregarPerfil(data.user.id);
+    if (authError) {
+      hideLoading();
+      const erros = {
+        'User already registered': 'Este e-mail já está cadastrado.',
+        'Password should be at least 6 characters': 'Senha muito curta (mínimo 6 caracteres).',
+        'Unable to validate email address: invalid format': 'E-mail inválido.',
+      };
+      notif(erros[authError.message] || authError.message, 'error');
+      return;
+    }
+
+    const authId = authData.user?.id;
+    if (!authId) {
+      hideLoading();
+      notif('Conta criada! Verifique seu e-mail para confirmar antes de entrar.', 'info');
+      toggleCadastro();
+      return;
+    }
+
+    // 2. Inserir perfil na tabela usuarios — ativo=false até admin liberar
+    const { error: insertError } = await sb.from('usuarios').insert({
+      auth_id:   authId,
+      nome,
+      matricula: mat,
+      posto,
+      unidade,
+      email,
+      perfil: 'operador',
+      ativo:  false,
+    });
+
+    // Ignorar erro de duplicata (trigger já inseriu)
+    if (insertError && !insertError.message.includes('duplicate')) {
+      console.warn('[Cadastro] Aviso ao inserir perfil:', insertError.message);
+    }
+
+    // 3. Deslogar imediatamente — acesso só após admin liberar
+    await sb.auth.signOut();
+    hideLoading();
+
+    // 4. Limpar formulário e voltar ao login com mensagem
+    document.getElementById('cad-nome').value     = '';
+    document.getElementById('cad-matricula').value = '';
+    document.getElementById('cad-posto').value     = '';
+    document.getElementById('cad-unidade').value   = '';
+    document.getElementById('cad-email').value     = '';
+    document.getElementById('cad-senha').value     = '';
+
+    toggleCadastro(); // volta ao formulário de login
+    notif('Cadastro realizado! Aguarde a liberação do seu acesso por um administrador.', 'success');
+
   } catch(e) {
     hideLoading();
-    notif('Erro ao criar conta. Tente novamente.', 'error');
+    console.error('[Cadastro]', e);
+    notif('Erro inesperado. Veja o console (F12).', 'error');
   }
 }
 
 async function carregarPerfil(authId) {
-  const { data: perfil, error } = await sb.from('usuarios')
-    .select('*')
-    .eq('auth_id', authId)
-    .single();
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    const { data: perfil, error } = await sb
+      .from('usuarios').select('*').eq('auth_id', authId).maybeSingle();
 
-  if (error || !perfil) {
-    hideLoading();
-    notif('Perfil não encontrado. Contate o administrador.', 'error');
-    await sb.auth.signOut();
-    return;
+    if (perfil) {
+      // Verificar se conta está ativa
+      if (!perfil.ativo) {
+        hideLoading();
+        await sb.auth.signOut();
+        notif('Seu acesso ainda não foi liberado. Aguarde a aprovação de um administrador.', 'error');
+        return;
+      }
+
+      currentUser = {
+        id:        perfil.id,
+        authId:    perfil.auth_id,
+        nome:      perfil.nome,
+        matricula: perfil.matricula,
+        posto:     perfil.posto,
+        unidade:   perfil.unidade,
+        email:     perfil.email,
+        perfil:    perfil.perfil,
+        ativo:     perfil.ativo,
+      };
+      hideLoading();
+      iniciarSessao();
+      return;
+    }
+
+    if (tentativa < 3) await new Promise(r => setTimeout(r, 600));
   }
-  currentUser = {
-    id:       perfil.id,
-    authId:   perfil.auth_id,
-    nome:     perfil.nome,
-    matricula:perfil.matricula,
-    posto:    perfil.posto,
-    unidade:  perfil.unidade,
-    email:    perfil.email,
-    perfil:   perfil.perfil,
-  };
+
   hideLoading();
-  iniciarSessao();
+  notif('Perfil não encontrado. Contate o administrador.', 'error');
+  await sb.auth.signOut();
 }
 
 function iniciarSessao() {
@@ -1188,10 +1362,16 @@ async function logout() {
   goPage('login');
 }
 
-// Verificar sessão existente ao carregar a página
-(async function verificarSessao() {
+// Verificar sessão existente + diagnóstico ao carregar
+(async function inicializar() {
+  const ok = await diagnosticar();
+  if (!ok) return;
+
   const { data: { session } } = await sb.auth.getSession();
-  if (session) await carregarPerfil(session.user.id);
+  if (session?.user?.id) {
+    showLoading('Restaurando sessão...');
+    await carregarPerfil(session.user.id);
+  }
 })();
 
 // ===================== MOBILE NAV =====================
@@ -1572,34 +1752,70 @@ async function renderPendentes() {
 
 async function renderUsuarios() {
   showLoading('Carregando usuários...');
-  const { data, error } = await sb.from('usuarios').select('*').order('nome');
+  const { data, error } = await sb.from('usuarios').select('*').order('ativo', { ascending: false }).order('nome');
   hideLoading();
   _usuariosCache = data || [];
   const el = document.getElementById('lista-usuarios');
   if (error || !data?.length) { el.innerHTML = '<div class="empty-state"><p>Nenhum usuário encontrado.</p></div>'; return; }
-  const rows = data.map(u => {
+
+  // Separar pendentes de aprovação dos ativos
+  const pendentes = data.filter(u => !u.ativo);
+  const ativos    = data.filter(u => u.ativo);
+
+  const renderLinha = (u) => {
     const isMe = u.id === currentUser.id;
-    const acao = u.perfil === 'admin'
+
+    // Botão de perfil
+    const btnPerfil = u.perfil === 'admin'
       ? (isMe
-          ? `<td><span style="font-size:0.72rem;color:var(--cinza);font-style:italic">Sua conta</span></td>`
-          : `<td><button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="rebaixarUsuario('${u.id}')">↓ Rebaixar</button></td>`)
-      : `<td><button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="promoverUsuario('${u.id}')">↑ Tornar Admin</button></td>`;
+          ? `<button class="btn-secondary" style="font-size:0.72rem;padding:0.3rem 0.7rem;opacity:0.5;cursor:default">Sua conta</button>`
+          : `<button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="rebaixarUsuario('${u.id}')">↓ Rebaixar</button>`)
+      : `<button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="promoverUsuario('${u.id}')">↑ Admin</button>`;
+
+    // Botão de acesso (ativo/inativo)
+    const btnAcesso = isMe
+      ? ''
+      : u.ativo
+        ? `<button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="bloquearUsuario('${u.id}')">🔒 Bloquear</button>`
+        : `<button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem;background:#27ae60" onclick="liberarUsuario('${u.id}')">✅ Liberar</button>`;
+
+    const badgeAtivo = u.ativo
+      ? `<span class="badge badge-validado">Ativo</span>`
+      : `<span class="badge badge-rejeitado">Pendente</span>`;
+
     return `
-    <tr>
+    <tr style="${!u.ativo ? 'opacity:0.7;background:rgba(231,76,60,0.05)' : ''}">
       <td>${u.matricula}</td>
       <td>${u.nome}${isMe ? ' <span style="font-size:0.68rem;color:var(--dourado)">(você)</span>' : ''}</td>
       <td>${u.posto}</td>
       <td>${u.unidade}</td>
       <td>${u.email}</td>
       <td><span class="badge ${u.perfil === 'admin' ? 'badge-validado' : 'badge-pendente'}">${u.perfil}</span></td>
-      ${acao}
+      <td>${badgeAtivo}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">${btnPerfil} ${btnAcesso}</td>
     </tr>`;
-  }).join('');
-  el.innerHTML = `
+  };
+
+  // Badge de pendentes no topo
+  const alertaPendentes = pendentes.length > 0
+    ? `<div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);
+        border-radius:4px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;
+        align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <span style="color:#e74c3c;font-weight:600">⏳ ${pendentes.length} usuário${pendentes.length>1?'s':''} aguardando liberação de acesso</span>
+        <span style="font-size:0.8rem;color:var(--cinza)">Revise abaixo e clique em ✅ Liberar para conceder acesso</span>
+      </div>`
+    : '';
+
+  el.innerHTML = alertaPendentes + `
     <div style="overflow-x:auto">
     <table class="registros-table">
-      <thead><tr><th>Matrícula</th><th>Nome</th><th>Posto</th><th>Unidade</th><th>E-mail</th><th>Perfil</th><th>Ação</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <thead><tr>
+        <th>Matrícula</th><th>Nome</th><th>Posto</th><th>Unidade</th>
+        <th>E-mail</th><th>Perfil</th><th>Acesso</th><th>Ações</th>
+      </tr></thead>
+      <tbody>
+        ${[...pendentes, ...ativos].map(renderLinha).join('')}
+      </tbody>
     </table>
     </div>
   `;
@@ -1619,6 +1835,23 @@ async function rebaixarUsuario(uid) {
   if (error) { notif('Erro ao rebaixar usuário.', 'error'); return; }
   const u = _usuariosCache.find(x => x.id === uid);
   notif(`${u?.nome || 'Usuário'} rebaixado para Operador.`, 'info');
+  renderUsuarios();
+}
+
+async function liberarUsuario(uid) {
+  const { error } = await sb.from('usuarios').update({ ativo: true }).eq('id', uid);
+  if (error) { notif('Erro ao liberar acesso.', 'error'); return; }
+  const u = _usuariosCache.find(x => x.id === uid);
+  notif(`✅ Acesso de ${u?.nome || 'usuário'} liberado com sucesso.`, 'success');
+  renderUsuarios();
+}
+
+async function bloquearUsuario(uid) {
+  if (uid === currentUser.id) { notif('Você não pode bloquear sua própria conta.', 'error'); return; }
+  const { error } = await sb.from('usuarios').update({ ativo: false }).eq('id', uid);
+  if (error) { notif('Erro ao bloquear acesso.', 'error'); return; }
+  const u = _usuariosCache.find(x => x.id === uid);
+  notif(`🔒 Acesso de ${u?.nome || 'usuário'} bloqueado.`, 'info');
   renderUsuarios();
 }
 
