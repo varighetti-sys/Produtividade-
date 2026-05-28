@@ -537,8 +537,8 @@
       <!-- LOGIN FORM -->
       <div id="login-form">
         <div class="form-group">
-          <label>Matrícula / E-mail</label>
-          <input type="text" id="login-email" placeholder="Digite sua matrícula ou e-mail" />
+          <label>R.E. / E-mail</label>
+          <input type="text" id="login-email" placeholder="Digite sua R.E. ou e-mail" />
         </div>
         <div class="form-group">
           <label>Senha</label>
@@ -557,8 +557,8 @@
             <input type="text" id="cad-nome" placeholder="Seu nome completo" />
           </div>
           <div class="form-group">
-            <label>Matrícula</label>
-            <input type="text" id="cad-matricula" placeholder="Nº de matrícula" />
+            <label>R.E.</label>
+            <input type="text" id="cad-matricula" placeholder="Nº de R.E." />
           </div>
         </div>
         <div class="form-group">
@@ -710,7 +710,6 @@
       <!-- PESSOAS — linhas 20–25 -->
       <div class="section-label">👤 PESSOAS</div>
       <div class="form-grid-4">
-        <div class="form-group"><label>Pessoas Abordadas</label><input type="number" id="r-pessoas-abordadas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Pessoas Presas</label><input type="number" id="r-presas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Adolesc. Sindicados</label><input type="number" id="r-adol-sind" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Adolesc. Apreendidos</label><input type="number" id="r-adol-apreend" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -819,14 +818,14 @@
       <div class="section-label">📝 Encerramento do Turno</div>
       <div class="form-grid-2">
         <div class="form-group">
-          <label>Matrícula (sem dígito) — Elaborado por</label>
+          <label>R.E. (sem dígito) — Elaborado por</label>
           <input type="text" id="r-matricula-elaborado" placeholder="Ex: 1234567"
             oninput="autopreencherElaborado(this.value)" maxlength="10"
             style="letter-spacing:0.08em" />
         </div>
         <div class="form-group">
           <label>Elaborado por</label>
-          <input type="text" id="r-elaborado-por" placeholder="Preenchido automaticamente pela matrícula" />
+          <input type="text" id="r-elaborado-por" placeholder="Preenchido automaticamente pela R.E." />
         </div>
         <div class="form-group">
           <label>Conferido por</label>
@@ -1224,13 +1223,13 @@ async function fazerLogin() {
   try {
     let loginEmail = entrada;
 
-    // Login por matrícula: busca e-mail sem exigir auth (usando service ou anon com RLS público em select)
+    // Login por R.E.: busca e-mail sem exigir auth (usando service ou anon com RLS público em select)
     if (!entrada.includes('@')) {
       const { data: u, error: eu } = await sb
         .from('usuarios').select('email').eq('matricula', entrada).maybeSingle();
       if (eu || !u) {
         hideLoading();
-        notif('Matrícula não encontrada. Tente com seu e-mail.', 'error');
+        notif('R.E. não encontrada. Tente com seu e-mail.', 'error');
         return;
       }
       loginEmail = u.email;
@@ -1241,7 +1240,7 @@ async function fazerLogin() {
       hideLoading();
       // Mensagens de erro traduzidas
       const erros = {
-        'Invalid login credentials': 'E-mail/matrícula ou senha incorretos.',
+        'Invalid login credentials': 'E-mail/R.E. ou senha incorretos.',
         'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
         'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
       };
@@ -1851,7 +1850,7 @@ async function renderUsuarios() {
     <div style="overflow-x:auto">
     <table class="registros-table">
       <thead><tr>
-        <th>Matrícula</th><th>Nome</th><th>Posto</th><th>Unidade</th>
+        <th>R.E.</th><th>Nome</th><th>Posto</th><th>Unidade</th>
         <th>E-mail</th><th>Perfil</th><th>Acesso</th><th>Ações</th>
       </tr></thead>
       <tbody>
@@ -2003,11 +2002,11 @@ async function rejeitar(id) {
 }
 
 // ===================== EXPORTAR PLANILHA =====================
-// Autopreenche "Elaborado por" quando matrícula bate com o usuário logado
-function autopreencherElaborado(matricula) {
-  if (!matricula || !currentUser) return;
-  const mat = matricula.trim();
-  // Compara com a matrícula do usuário logado (sem dígito = primeiros chars)
+// Autopreenche "Elaborado por" quando R.E. bate com o usuário logado
+function autopreencherElaborado(re) {
+  if (!re || !currentUser) return;
+  const mat = re.trim();
+  // Compara com a R.E. do usuário logado (sem dígito = primeiros chars)
   const matLogado = currentUser.matricula?.replace(/\D/g, '') || '';
   if (mat && (matLogado.startsWith(mat) || mat === matLogado)) {
     document.getElementById('r-elaborado-por').value =
@@ -2321,87 +2320,166 @@ function exportarImpacto(todos, data, unidade) {
 
 // ===================== EXPORTAR ORION =====================
 function exportarOrion(todos, data, unidade) {
-  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00', 'DEJEM', 'DELEGADA'];
+  const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00', 'DEJEM', 'DELEGADA'];
+  const dadosPorTurno = turnos.map(t => {
+    const regs = todos.filter(r => r.turno === t);
+    return regs.length ? somarDados(regs) : null;
+  });
+  const T = somarDados(todos);
+
+  const elaborados = todos.map(r => r.elaboradoPor).filter(Boolean).join('; ') || '';
+  const conferidos = todos.map(r => r.conferidoPor).filter(Boolean).join('; ') || '';
+  const emails     = todos.map(r => r.emailRemetente).filter(Boolean).join('; ') || '';
+
   const [y, m, d] = data.split('-');
   const dataExib  = `${d}/${m}/${y}`;
-  const unidLabel = unidade || 'Todas as Unidades';
+  const unidLabel = unidade || '32º BPM/I - Todas as Unidades';
 
-  const s = (r, path) => { let v = r.dados; for (const p of path.split('.')) v = v?.[p]; return parseFloat(v) || 0; };
+  // Colunas: label | TOTAL | turno1 | turno2 | turno3 | DEJEM | DELEGADA
+  const numCols = 2 + turnos.length;
+  const col   = campo => [T[campo]||0, ...dadosPorTurno.map(dt => dt ? (dt[campo]||0) : '')];
+  const R     = (label, campo) => [label, ...col(campo)];
+  const H     = label => [label, ...Array(numCols - 1).fill('')];
+  const empty = () => Array(numCols).fill('');
+
+  const ws_data = [
+    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', ...Array(numCols-1).fill('')],
+    ['COORDENAÇÃO OPERACIONAL PM',             ...Array(numCols-1).fill('')],
+    ['OPERAÇÃO ORION',                          ...Array(numCols-1).fill('')],
+    empty(),
+    ['PLANILHA DE RESULTADOS',                  ...Array(numCols-1).fill('')],
+    empty(),
+    [`Nome da Unidade: ${unidLabel}`,           ...Array(numCols-1).fill('')],
+    empty(),
+    [dataExib, '00:00 AS 23:59 (TOTAL)', ...turnos],
+    // OPERAÇÃO
+    H('OPERAÇÃO'),
+    R('Pessoas abordadas (exc. Condutores)',       'abordadas'),
+    R('Estabelecimentos comerciais fiscalizados',  'estabCom'),
+    R('Ocorr. ao DP s/ BOPC',                      'ocorrDP'),
+    R('Qtde BOPM lavrados',                        'bopm'),
+    R('Qtde RAIA conf.',                           'raia'),
+    R('Mandado de Busca/Apreensão cumpridos',      'mandado'),
+    R('Ato Infracional',                           'atoInfracional'),
+    R('Crime Exc. Tráfico',                        'crimeExc'),
+    R('Tráfico de entorpecentes',                  'trafico'),
+    R('Ocorrências Atendidas',                     'ocorrAtendidas'),
+    R('Efetivo Empregado',                         'efefivoEmpregado'),
+    // PESSOAS
+    H('PESSOAS'),
+    R('Pessoas Presas',        'presas'),
+    R('Adolesc. Sindicados',   'adolSindicados'),
+    R('Adolesc. Apreendidos',  'adolApreendidos'),
+    R('Procurados',            'procurados'),
+    R('Manifestantes',         'manifestantes'),
+    R('Pessoas Abordadas',     'pessoasAbordadas'),
+    // DROGAS
+    H('DROGAS'),
+    R('Cocaína (em Kg)',        'cocaina'),
+    R('Crack (em Kg)',          'crack'),
+    R('Maconha (em Kg)',        'maconha'),
+    R('Heroína (em Kg)',        'heroina'),
+    R('Outra Droga (em Kg)',    'outraDrogaKg'),
+    R('Outra Droga (em Qtde)', 'outraDrogaQtde'),
+    // BÉLICO
+    H('MATERIAL BÉLICO'),
+    R('Arma Branca',                   'armaBranca'),
+    R('Arma Fogo (Cal. Permitido)',    'armaPermitida'),
+    R('Arma Fogo (Cal. Restrito)',     'armaRestrita'),
+    R('Munição (Cal. Permitido)',      'municaoPermitida'),
+    R('Munição (Cal. Restrito)',       'municaoRestrita'),
+    R('Explosivo/Detonador',           'explosivo'),
+    R('Outro Mat. Bélico',             'outroBelico'),
+    // APREENSÕES
+    H('APREENSÕES'),
+    R('Moedas (Valor em R$)',    'moedas'),
+    R('Medicamento',             'medicamento'),
+    R('Cigarro',                 'cigarro'),
+    R('Eqpto Eletrônico',        'eletronico'),
+    R('Prod. Químico',           'quimico'),
+    R('Descaminho',              'descaminho'),
+    R('Outros Tipos Apreensão',  'outrosApreensao'),
+    // TRÂNSITO
+    H('TRÂNSITO (URBANO)'),
+    R('Acidentes de Trânsito SEM Vítima',            'acidenteSemVitima'),
+    R('Acidente COM Vítima',                          'acidenteComVitima'),
+    R('Vítima NÃO Fatal',                             'vtimaNaoFatal'),
+    R('Vítima FATAL',                                 'vtimaFatal'),
+    R('AIT (Exceto Artigo 165/165-A/228 e 253A)',    'aitDemais'),
+    R('AIT Art.165 CTB',    'ait165'),
+    R('AIT Art.165-A CTB',  'ait165a'),
+    R('AIT Art.228 CTB',    'ait228'),
+    R('AIT Art.253-A CTB',  'ait253a'),
+    R('Bloqueios',           'bloqueios'),
+    R('Pontos de Visibilidade', 'pontosVis'),
+    R('Condutores Fiscalizados', 'condutores'),
+    R('Teste Etilômetro Realizado', 'bafometro'),
+    R('Flagrante Art. 306 CTB', 'flagrante306'),
+    R('CLA Apreendido',     'cla'),
+    R('CNH Apreendido',     'cnh'),
+    R('Outro Documento Apreendido', 'docApreend'),
+    // VEÍCULOS
+    H('VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)'),
+    R('Auto','vfAuto'), R('Moto','vfMoto'), R('Coletivo','vfColetivo'),
+    R('Veículo de Carga','vfCarga'), R('Outro tipo de Veículo','vfOutro'),
+    H('VEÍCULO REMOVIDO'),
+    R('Auto','vrAuto'), R('Moto','vrMoto'), R('Coletivo','vrColetivo'),
+    R('Veículo de Carga','vrCarga'), R('Outro tipo de Veículo','vrOutro'),
+    H('VEÍCULO LOCALIZADO'),
+    R('Auto','vlAuto'), R('Moto','vlMoto'), R('Coletivo','vlColetivo'),
+    R('Veículo de Carga','vlCarga'), R('Outro tipo de Veículo','vlOutro'),
+    // BOMBEIROS
+    H('BOMBEIROS'),
+    R('Incêndio','incendio'), R('Salvamento','salvamento'), R('Resgate','resgate'),
+    R('Afogamento (fatal)','afogamento'), R('Condução ao PS / hospital','conducaoPS'),
+    empty(),
+    [`Elaborado por: ${elaborados}`, ...Array(numCols-1).fill('')],
+    [`Conferido por: ${conferidos}`, ...Array(numCols-1).fill('')],
+    [`e-mail remetente: ${emails}`,  ...Array(numCols-1).fill('')],
+  ];
 
   const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-  // Uma aba por unidade (ou única se filtrado)
-  const unidades = unidade ? [unidade] : [...new Set(todos.map(r => r.unidade))];
+  // Larguras das colunas
+  ws['!cols'] = [{ wch:46 },{ wch:20 }, ...turnos.map(() => ({ wch:16 }))];
 
-  unidades.forEach(und => {
-    const regsUnid = todos.filter(r => r.unidade === und);
-    if (!regsUnid.length) return;
+  // Estilos
+  const secRows  = new Set();
+  let rowIdx = 9;
+  // OPERAÇÃO=9, PESSOAS=21, DROGAS=28, BÉLICO=35, APREENSÕES=43, TRÂNSITO=51, VF=69, VR=75, VL=81, BOMBEIROS=87
+  [9,21,28,35,43,51,69,75,81,87].forEach(r => secRows.add(r));
+  const headRows = new Set([0,1,2,4,6]);
 
-    const ws_data = [
-      ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', '', '', '', '', '', ''],
-      ['PLANILHA ORION', '', '', '', '', '', ''],
-      [`Unidade: ${und}`, '', '', `Data: ${dataExib}`, '', '', ''],
-      [''],
-      ['Turno', 'Ocorrências Atendidas', 'Efetivo Empregado', 'Pessoas Abordadas', 'Pessoas Presas', 'Elaborado por', 'Status'],
-    ];
-
-    // Linha por turno
-    let totalOcorr = 0, totalEfetivo = 0, totalAbord = 0, totalPresos = 0;
-    turnos.forEach(t => {
-      const regs = regsUnid.filter(r => r.turno === t);
-      if (regs.length) {
-        regs.forEach(r => {
-          const ocorr    = s(r, 'operacao.ocorrAtendidas');
-          const efetivo  = s(r, 'operacao.efefivoEmpregado');
-          const abord    = s(r, 'pessoas.pessoasAbordadas');
-          const presas   = s(r, 'pessoas.presas');
-          totalOcorr   += ocorr;
-          totalEfetivo += efetivo;
-          totalAbord   += abord;
-          totalPresos  += presas;
-          ws_data.push([t, ocorr, efetivo, abord, presas, r.elaboradoPor || '', r.status]);
-        });
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let ri = range.s.r; ri <= range.e.r; ri++) {
+    for (let ci = range.s.c; ci <= range.e.c; ci++) {
+      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws[addr]) continue;
+      if (headRows.has(ri)) {
+        ws[addr].s = { font:{ bold:true, sz: ri===0?13:11, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
+      } else if (ri === 8) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
+      } else if (secRows.has(ri)) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
+      } else if (ci === 0) {
+        ws[addr].s = { font:{ sz:10 }, fill:{ fgColor:{ rgb:'F0F4FF' } } };
+      } else if (ci === 1) {
+        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'0A1628' } }, fill:{ fgColor:{ rgb:'C9A227' } }, alignment:{ horizontal:'center' } };
       } else {
-        ws_data.push([t, '-', '-', '-', '-', '-', 'Sem lançamento']);
-      }
-    });
-
-    // Linha de totais
-    ws_data.push(['']);
-    ws_data.push(['TOTAL', totalOcorr, totalEfetivo, totalAbord, totalPresos, '', '']);
-
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    ws['!cols'] = [{ wch:18 },{ wch:22 },{ wch:18 },{ wch:18 },{ wch:16 },{ wch:28 },{ wch:14 }];
-
-    // Estilo cabeçalho
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let ri = range.s.r; ri <= range.e.r; ri++) {
-      for (let ci = range.s.c; ci <= range.e.c; ci++) {
-        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-        if (!ws[addr]) continue;
-        if (ri <= 2) {
-          ws[addr].s = { font:{ bold:true, sz:12, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
-        } else if (ri === 4) {
-          ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
-        } else if (ws[addr].v === 'TOTAL') {
-          ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
-        } else if (ci === 0) {
-          ws[addr].s = { font:{ bold:true, sz:10 }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
-        } else {
-          ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' } };
-        }
+        ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
       }
     }
+  }
 
-    ws['!merges'] = [
-      { s:{r:0,c:0}, e:{r:0,c:6} },
-      { s:{r:1,c:0}, e:{r:1,c:6} },
-    ];
+  const lastCol = numCols - 1;
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:lastCol}}, {s:{r:1,c:0},e:{r:1,c:lastCol}},
+    {s:{r:2,c:0},e:{r:2,c:lastCol}}, {s:{r:4,c:0},e:{r:4,c:lastCol}},
+    {s:{r:6,c:0},e:{r:6,c:lastCol}},
+  ];
 
-    const sheetName = und.replace(/[^a-zA-Z0-9 ]/g,'').substring(0,31);
-    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Unidade');
-  });
-
+  XLSX.utils.book_append_sheet(wb, ws, 'Resultado ORION');
   const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
   const filename = `ORION_${data}_${safeUnid}.xlsx`;
   XLSX.writeFile(wb, filename);
