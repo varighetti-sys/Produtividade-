@@ -1607,7 +1607,7 @@ async function salvarRegistro() {
     const { error } = await sb.from('registros').insert({
       ...payload,
       operador_id:   currentUser.id,
-      operador_nome: `${currentUser.posto} ${currentUser.nome}`,
+      operador_nome: `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`,
       status: 'Pendente',
     });
 
@@ -2010,7 +2010,7 @@ function autopreencherElaborado(re) {
   const matLogado = currentUser.matricula?.replace(/\D/g, '') || '';
   if (mat && (matLogado.startsWith(mat) || mat === matLogado)) {
     document.getElementById('r-elaborado-por').value =
-      `${currentUser.posto} ${currentUser.nome}`;
+      `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`;
   } else if (mat.length < 3) {
     document.getElementById('r-elaborado-por').value = '';
   }
