@@ -675,6 +675,8 @@
             <option>00:00 - 06:00</option>
             <option>06:00 - 18:00</option>
             <option>18:00 - 00:00</option>
+            <option>DEJEM</option>
+            <option>DELEGADA</option>
           </select>
         </div>
         <div class="form-group">
@@ -701,11 +703,14 @@
         <div class="form-group"><label>Ato Infracional</label><input type="number" id="r-ato-inf" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Crime Exc. Tráfico</label><input type="number" id="r-crime-exc" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Tráfico de entorpecentes</label><input type="number" id="r-trafico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Ocorrências Atendidas</label><input type="number" id="r-ocorr-atendidas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
+        <div class="form-group"><label>Efetivo Empregado</label><input type="number" id="r-efetivo-empregado" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
       <!-- PESSOAS — linhas 20–25 -->
       <div class="section-label">👤 PESSOAS</div>
       <div class="form-grid-4">
+        <div class="form-group"><label>Pessoas Abordadas</label><input type="number" id="r-pessoas-abordadas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Pessoas Presas</label><input type="number" id="r-presas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Adolesc. Sindicados</label><input type="number" id="r-adol-sind" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Adolesc. Apreendidos</label><input type="number" id="r-adol-apreend" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -814,14 +819,20 @@
       <div class="section-label">📝 Encerramento do Turno</div>
       <div class="form-grid-2">
         <div class="form-group">
+          <label>Matrícula (sem dígito) — Elaborado por</label>
+          <input type="text" id="r-matricula-elaborado" placeholder="Ex: 1234567"
+            oninput="autopreencherElaborado(this.value)" maxlength="10"
+            style="letter-spacing:0.08em" />
+        </div>
+        <div class="form-group">
           <label>Elaborado por</label>
-          <input type="text" id="r-elaborado-por" placeholder="Nome do responsável pela elaboração" />
+          <input type="text" id="r-elaborado-por" placeholder="Preenchido automaticamente pela matrícula" />
         </div>
         <div class="form-group">
           <label>Conferido por</label>
           <input type="text" id="r-conferido-por" placeholder="Nome do responsável pela conferência" />
         </div>
-        <div class="form-group col-span-2">
+        <div class="form-group">
           <label>e-mail remetente</label>
           <input type="email" id="r-email-remetente" placeholder="email@pmesp.gov.br" />
         </div>
@@ -870,8 +881,15 @@
     <button class="modal-close" onclick="fecharModal('modal-exportar')">✕</button>
     <h3>Exportar Planilha de Resultados</h3>
     <p style="font-size:0.82rem;color:var(--cinza);margin-bottom:1.5rem">
-      Selecione a data. Os dados dos 3 turnos validados serão somados e exportados no formato original da Planilha IMPACTO.
+      Selecione a data, unidade e o tipo de planilha para download.
     </p>
+    <div class="form-group">
+      <label>Tipo de Planilha</label>
+      <select id="export-tipo">
+        <option value="impacto">📋 Planilha da Operação Impacto</option>
+        <option value="orion">🔵 Planilha Orion</option>
+      </select>
+    </div>
     <div class="form-group">
       <label>Data do Relatório</label>
       <input type="date" id="export-data" />
@@ -886,7 +904,6 @@
         <option>GP - Florinéia</option><option>GP - Tarumã</option>
       </select>
     </div>
-    <div id="export-preview" style="background:rgba(10,22,40,0.6);border:1px solid var(--borda);padding:1rem;margin-bottom:1.2rem;font-size:0.78rem;color:var(--cinza);display:none"></div>
     <div style="display:flex;gap:1rem;justify-content:flex-end">
       <button class="btn-secondary" onclick="fecharModal('modal-exportar')">Cancelar</button>
       <button class="btn-primary" style="width:auto;padding:0.65rem 1.5rem" onclick="exportarPlanilha()">Baixar .xlsx</button>
@@ -1089,11 +1106,14 @@ function dbParaApp(r) {
         raia:           r.op_raia,         mandado:        r.op_mandado,
         atoInfracional: r.op_ato_infracional, crimeExc:    r.op_crime_exc,
         trafico:        r.op_trafico,
+        ocorrAtendidas:   r.op_ocorr_atendidas,
+        efefivoEmpregado: r.op_efetivo_empregado,
       },
       pessoas: {
         presas:          r.ps_presas,      adolSindicados:  r.ps_adol_sindicados,
         adolApreendidos: r.ps_adol_apreendidos, procurados: r.ps_procurados,
         manifestantes:   r.ps_manifestantes,
+        pessoasAbordadas: r.ps_pessoas_abordadas,
       },
       drogas: {
         cocaina: r.dr_cocaina,  crack: r.dr_crack,  maconha: r.dr_maconha,
@@ -1145,10 +1165,13 @@ function formParaDB(g, gi, gs, data, turno, unidade) {
     op_raia:      gi('r-raia'),        op_mandado:   gi('r-mandado'),
     op_ato_infracional: gi('r-ato-inf'), op_crime_exc: gi('r-crime-exc'),
     op_trafico:   gi('r-trafico'),
+    op_ocorr_atendidas:   gi('r-ocorr-atendidas'),
+    op_efetivo_empregado: gi('r-efetivo-empregado'),
     // PESSOAS
     ps_presas: gi('r-presas'), ps_adol_sindicados: gi('r-adol-sind'),
     ps_adol_apreendidos: gi('r-adol-apreend'), ps_procurados: gi('r-procurados'),
     ps_manifestantes: gi('r-manifestantes'),
+    ps_pessoas_abordadas: gi('r-pessoas-abordadas'),
     // DROGAS
     dr_cocaina: g('r-cocaina'),   dr_crack: g('r-crack'),  dr_maconha: g('r-maconha'),
     dr_heroina: g('r-heroina'),   dr_outra_droga_kg: g('r-outra-droga-kg'),
@@ -1980,26 +2003,25 @@ async function rejeitar(id) {
 }
 
 // ===================== EXPORTAR PLANILHA =====================
+// Autopreenche "Elaborado por" quando matrícula bate com o usuário logado
+function autopreencherElaborado(matricula) {
+  if (!matricula || !currentUser) return;
+  const mat = matricula.trim();
+  // Compara com a matrícula do usuário logado (sem dígito = primeiros chars)
+  const matLogado = currentUser.matricula?.replace(/\D/g, '') || '';
+  if (mat && (matLogado.startsWith(mat) || mat === matLogado)) {
+    document.getElementById('r-elaborado-por').value =
+      `${currentUser.posto} ${currentUser.nome}`;
+  } else if (mat.length < 3) {
+    document.getElementById('r-elaborado-por').value = '';
+  }
+}
+
 function abrirModalExportar() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('export-data').value = today;
-
-  // Operador: fixa a própria unidade e oculta o select
-  const selectUnidade = document.getElementById('export-unidade');
-  const labelUnidade  = document.getElementById('export-unidade-label');
-  if (currentUser.perfil !== 'admin') {
-    selectUnidade.value = currentUser.unidade;
-    selectUnidade.style.display = 'none';
-    if (labelUnidade) labelUnidade.textContent = `Unidade: ${currentUser.unidade}`;
-  } else {
-    selectUnidade.style.display = '';
-    selectUnidade.value = '';
-    if (labelUnidade) labelUnidade.textContent = 'Unidade (opcional — deixe em branco para todas)';
-  }
-
-  atualizarPreviewExport();
-  document.getElementById('export-data').addEventListener('change', atualizarPreviewExport);
-  document.getElementById('export-unidade').addEventListener('change', atualizarPreviewExport);
+  document.getElementById('export-tipo').value = 'impacto';
+  document.getElementById('export-unidade').value = '';
   abrirModal('modal-exportar');
 }
 
@@ -2042,13 +2064,16 @@ function somarDados(registros) {
     mandado:        sum('operacao.mandado'),
     atoInfracional: sum('operacao.atoInfracional'),
     crimeExc:       sum('operacao.crimeExc'),
-    trafico:        sum('operacao.trafico'),
+    trafico:          sum('operacao.trafico'),
+    ocorrAtendidas:   sum('operacao.ocorrAtendidas'),
+    efefivoEmpregado: sum('operacao.efefivoEmpregado'),
     // PESSOAS
-    presas:          sum('pessoas.presas'),
-    adolSindicados:  sum('pessoas.adolSindicados'),
-    adolApreendidos: sum('pessoas.adolApreendidos'),
-    procurados:      sum('pessoas.procurados'),
-    manifestantes:   sum('pessoas.manifestantes'),
+    presas:           sum('pessoas.presas'),
+    adolSindicados:   sum('pessoas.adolSindicados'),
+    adolApreendidos:  sum('pessoas.adolApreendidos'),
+    procurados:       sum('pessoas.procurados'),
+    manifestantes:    sum('pessoas.manifestantes'),
+    pessoasAbordadas: sum('pessoas.pessoasAbordadas'),
     // DROGAS
     cocaina:        sum('drogas.cocaina'),
     crack:          sum('drogas.crack'),
@@ -2120,10 +2145,18 @@ function somarDados(registros) {
 function exportarPlanilha() {
   const data    = document.getElementById('export-data').value;
   const unidade = document.getElementById('export-unidade').value;
+  const tipo    = document.getElementById('export-tipo').value;
   if (!data) { notif('Selecione uma data.', 'error'); return; }
 
   const todos = _registrosCache.filter(r => r.data === data && (unidade === '' || r.unidade === unidade));
   if (!todos.length) { notif('Nenhum registro encontrado para exportar.', 'error'); return; }
+
+  if (tipo === 'orion') {
+    exportarOrion(todos, data, unidade);
+  } else {
+    exportarImpacto(todos, data, unidade);
+  }
+}
 
   const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
   const dadosPorTurno = turnos.map(t => {
@@ -2280,6 +2313,96 @@ function exportarPlanilha() {
   XLSX.utils.book_append_sheet(wb, ws, 'Resultado IMPACTO');
   const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
   const filename = `IMPACTO_${data}_${safeUnid}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  notif(`Planilha "${filename}" baixada com sucesso.`, 'success');
+  fecharModal('modal-exportar');
+}
+
+// ===================== EXPORTAR ORION =====================
+function exportarOrion(todos, data, unidade) {
+  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00', 'DEJEM', 'DELEGADA'];
+  const [y, m, d] = data.split('-');
+  const dataExib  = `${d}/${m}/${y}`;
+  const unidLabel = unidade || 'Todas as Unidades';
+
+  const s = (r, path) => { let v = r.dados; for (const p of path.split('.')) v = v?.[p]; return parseFloat(v) || 0; };
+
+  const wb = XLSX.utils.book_new();
+
+  // Uma aba por unidade (ou única se filtrado)
+  const unidades = unidade ? [unidade] : [...new Set(todos.map(r => r.unidade))];
+
+  unidades.forEach(und => {
+    const regsUnid = todos.filter(r => r.unidade === und);
+    if (!regsUnid.length) return;
+
+    const ws_data = [
+      ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', '', '', '', '', '', ''],
+      ['PLANILHA ORION', '', '', '', '', '', ''],
+      [`Unidade: ${und}`, '', '', `Data: ${dataExib}`, '', '', ''],
+      [''],
+      ['Turno', 'Ocorrências Atendidas', 'Efetivo Empregado', 'Pessoas Abordadas', 'Pessoas Presas', 'Elaborado por', 'Status'],
+    ];
+
+    // Linha por turno
+    let totalOcorr = 0, totalEfetivo = 0, totalAbord = 0, totalPresos = 0;
+    turnos.forEach(t => {
+      const regs = regsUnid.filter(r => r.turno === t);
+      if (regs.length) {
+        regs.forEach(r => {
+          const ocorr    = s(r, 'operacao.ocorrAtendidas');
+          const efetivo  = s(r, 'operacao.efefivoEmpregado');
+          const abord    = s(r, 'pessoas.pessoasAbordadas');
+          const presas   = s(r, 'pessoas.presas');
+          totalOcorr   += ocorr;
+          totalEfetivo += efetivo;
+          totalAbord   += abord;
+          totalPresos  += presas;
+          ws_data.push([t, ocorr, efetivo, abord, presas, r.elaboradoPor || '', r.status]);
+        });
+      } else {
+        ws_data.push([t, '-', '-', '-', '-', '-', 'Sem lançamento']);
+      }
+    });
+
+    // Linha de totais
+    ws_data.push(['']);
+    ws_data.push(['TOTAL', totalOcorr, totalEfetivo, totalAbord, totalPresos, '', '']);
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!cols'] = [{ wch:18 },{ wch:22 },{ wch:18 },{ wch:18 },{ wch:16 },{ wch:28 },{ wch:14 }];
+
+    // Estilo cabeçalho
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let ri = range.s.r; ri <= range.e.r; ri++) {
+      for (let ci = range.s.c; ci <= range.e.c; ci++) {
+        const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+        if (!ws[addr]) continue;
+        if (ri <= 2) {
+          ws[addr].s = { font:{ bold:true, sz:12, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
+        } else if (ri === 4) {
+          ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
+        } else if (ws[addr].v === 'TOTAL') {
+          ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
+        } else if (ci === 0) {
+          ws[addr].s = { font:{ bold:true, sz:10 }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
+        } else {
+          ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' } };
+        }
+      }
+    }
+
+    ws['!merges'] = [
+      { s:{r:0,c:0}, e:{r:0,c:6} },
+      { s:{r:1,c:0}, e:{r:1,c:6} },
+    ];
+
+    const sheetName = und.replace(/[^a-zA-Z0-9 ]/g,'').substring(0,31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Unidade');
+  });
+
+  const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
+  const filename = `ORION_${data}_${safeUnid}.xlsx`;
   XLSX.writeFile(wb, filename);
   notif(`Planilha "${filename}" baixada com sucesso.`, 'success');
   fecharModal('modal-exportar');
