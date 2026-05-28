@@ -601,7 +601,12 @@
 <!-- DASHBOARD PAGE -->
 <div id="page-dashboard" class="page">
   <div class="main-container">
-    <div class="section-title">Dashboard Geral</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+      <div class="section-title" style="margin-bottom:0;border:none;padding:0">Dashboard Geral</div>
+      <button class="btn-primary" style="width:auto;padding:0.65rem 1.8rem;display:flex;align-items:center;gap:0.6rem" onclick="abrirModalExportar()">
+        <span style="font-size:1.1rem">⬇</span> Exportar Planilha
+      </button>
+    </div>
     <div class="dash-grid" id="dash-cards"></div>
     
     <div class="tab-bar">
@@ -872,7 +877,7 @@
       <input type="date" id="export-data" />
     </div>
     <div class="form-group">
-      <label>Unidade (opcional — deixe em branco para todas)</label>
+      <label id="export-unidade-label">Unidade (opcional — deixe em branco para todas)</label>
       <select id="export-unidade">
         <option value="">Todas as Unidades</option>
         <option>3 CIA PM</option><option>Pel - Cândido Mota</option>
@@ -1978,6 +1983,20 @@ async function rejeitar(id) {
 function abrirModalExportar() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('export-data').value = today;
+
+  // Operador: fixa a própria unidade e oculta o select
+  const selectUnidade = document.getElementById('export-unidade');
+  const labelUnidade  = document.getElementById('export-unidade-label');
+  if (currentUser.perfil !== 'admin') {
+    selectUnidade.value = currentUser.unidade;
+    selectUnidade.style.display = 'none';
+    if (labelUnidade) labelUnidade.textContent = `Unidade: ${currentUser.unidade}`;
+  } else {
+    selectUnidade.style.display = '';
+    selectUnidade.value = '';
+    if (labelUnidade) labelUnidade.textContent = 'Unidade (opcional — deixe em branco para todas)';
+  }
+
   atualizarPreviewExport();
   document.getElementById('export-data').addEventListener('change', atualizarPreviewExport);
   document.getElementById('export-unidade').addEventListener('change', atualizarPreviewExport);
