@@ -2158,6 +2158,7 @@ function exportarPlanilha() {
   }
 }
 
+function exportarImpacto(todos, data, unidade) {
   const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
   const dadosPorTurno = turnos.map(t => {
     const regs = todos.filter(r => r.turno === t);
