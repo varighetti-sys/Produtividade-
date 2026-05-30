@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Operação Impacto - PMESP</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a1628">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,11 +13,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Sistema de registro de turnos da Operação Impacto - PMESP">
 
-<!-- Ícones PWA para iOS (inline SVG como data URI) -->
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a1628'/%3E%3Ccircle cx='256' cy='256' r='220' fill='none' stroke='%23c9a227' stroke-width='18'/%3E%3Cpolygon points='256,80 290,180 400,180 315,240 345,340 256,280 167,340 197,240 112,180 222,180' fill='%23c9a227'/%3E%3Ctext x='256' y='420' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='52' fill='%23c9a227'%3EPMESP%3C/text%3E%3C/svg%3E">
 
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
   :root {
     --azul: #0a1628;
@@ -291,6 +291,10 @@
   }
   .dash-card .sub { font-size: 0.72rem; color: var(--cinza); margin-top: 0.4rem; }
 
+  /* GRID DE GRÁFICOS */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .chart-container { background: var(--card); border: 1px solid var(--borda); padding: 1.5rem; position: relative; min-height: 320px; }
+
   /* MODAL */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
@@ -377,7 +381,7 @@
 
   .form-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; flex-wrap: wrap; }
 
-  /* ─── HAMBURGER MENU ─── */
+  /* HAMBURGER MENU */
   .hamburger {
     display: none; flex-direction: column; justify-content: center;
     gap: 5px; background: none; border: none; cursor: pointer;
@@ -405,12 +409,13 @@
   .mobile-nav .user-badge { font-size: 0.85rem; padding: 0.5rem 1.5rem; }
   .mobile-nav .logout-btn { font-size: 0.85rem; padding: 0.5rem 1.5rem; }
 
-  /* ─── BREAKPOINT 900px ─── */
+  /* BREAKPOINT 900px */
   @media (max-width: 900px) {
     .main-container { padding: 1.25rem; }
     .form-grid       { grid-template-columns: 1fr 1fr; }
     .form-grid-4     { grid-template-columns: 1fr 1fr; }
     .dash-grid       { grid-template-columns: 1fr 1fr; }
+    .chart-grid      { grid-template-columns: 1fr; }
     .col-span-3, .col-span-4 { grid-column: span 2; }
     .header-nav, .user-info { display: none; }
     .hamburger { display: flex; }
@@ -431,7 +436,7 @@
     .filter-bar .form-group { min-width: 130px; }
   }
 
-  /* ─── BREAKPOINT 600px (smartphones) ─── */
+  /* BREAKPOINT 600px (smartphones) */
   @media (max-width: 600px) {
     .main-container { padding: 0.85rem; }
     .form-grid       { grid-template-columns: 1fr; }
@@ -483,7 +488,7 @@
     #page-admin .main-container > div:first-child button { width: 100%; }
   }
 
-  /* ─── BREAKPOINT 380px (smartphones pequenos) ─── */
+  /* BREAKPOINT 380px (smartphones pequenos) */
   @media (max-width: 380px) {
     .dash-grid { grid-template-columns: 1fr; }
     .header-title h1 { font-size: 1rem; }
@@ -493,7 +498,6 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header" id="main-header" style="display:none">
   <div class="header-brand">
     <div class="header-logo">PM</div>
@@ -516,7 +520,6 @@
   </button>
 </header>
 
-<!-- MOBILE NAV OVERLAY -->
 <div class="mobile-nav" id="mobile-nav">
   <div class="user-badge" id="user-badge-mobile" style="margin-bottom:0.5rem"></div>
   <button class="nav-btn" onclick="goPage('dashboard');closeMobileNav()">📊 Dashboard</button>
@@ -525,7 +528,6 @@
   <button class="logout-btn" style="margin-top:1rem;padding:0.7rem 2rem;font-size:0.9rem" onclick="logout()">Sair do Sistema</button>
 </div>
 
-<!-- LOGIN PAGE -->
 <div id="page-login" class="page active">
   <div class="login-wrap">
     <div class="login-card">
@@ -534,7 +536,6 @@
         <h2>OPERAÇÃO IMPACTO</h2>
         <p>Polícia Militar · PMESP</p>
       </div>
-      <!-- LOGIN FORM -->
       <div id="login-form">
         <div class="form-group">
           <label>R.E. / E-mail</label>
@@ -549,7 +550,6 @@
           Não tem acesso? <a onclick="toggleCadastro()">Cadastre-se</a>
         </div>
       </div>
-      <!-- CADASTRO FORM -->
       <div id="cadastro-form" style="display:none">
         <div class="form-grid-2">
           <div class="form-group">
@@ -598,7 +598,6 @@
   </div>
 </div>
 
-<!-- DASHBOARD PAGE -->
 <div id="page-dashboard" class="page">
   <div class="main-container">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
@@ -659,7 +658,6 @@
   </div>
 </div>
 
-<!-- NOVO REGISTRO PAGE -->
 <div id="page-novo-registro" class="page">
   <div class="main-container">
     <div class="section-title" id="form-page-title">Registro de Turno</div>
@@ -668,7 +666,6 @@
     </div>
     <div class="turno-card">
 
-      <!-- IDENTIFICAÇÃO -->
       <div class="section-label">📋 Identificação do Turno</div>
       <div class="form-grid">
         <div class="form-group">
@@ -698,7 +695,6 @@
         </div>
       </div>
 
-      <!-- OPERAÇÃO — linhas 10–19 da planilha -->
       <div class="section-label">🔵 OPERAÇÃO</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Pessoas abordadas (exc. Condutores)</label><input type="number" id="r-abordadas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -714,7 +710,6 @@
         <div class="form-group"><label>Efetivo Empregado</label><input type="number" id="r-efetivo-empregado" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- PESSOAS — linhas 20–25 -->
       <div class="section-label">👤 PESSOAS</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Pessoas Presas</label><input type="number" id="r-presas" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -724,7 +719,6 @@
         <div class="form-group"><label>Manifestantes</label><input type="number" id="r-manifestantes" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- DROGAS — linhas 26–32 -->
       <div class="section-label">⚠️ DROGAS</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Cocaína (em Kg)</label><input type="number" id="r-cocaina" step="0.001" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -735,7 +729,6 @@
         <div class="form-group"><label>Outra Droga (em Qtde)</label><input type="number" id="r-outra-droga-qtde" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- MATERIAL BÉLICO — linhas 33–40 -->
       <div class="section-label">🔫 MATERIAL BÉLICO</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Arma Branca</label><input type="number" id="r-arma-branca" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -747,7 +740,6 @@
         <div class="form-group"><label>Outro Mat. Bélico</label><input type="number" id="r-outro-belico" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- APREENSÕES — linhas 41–48 -->
       <div class="section-label">📦 APREENSÕES</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Moedas (Valor em R$)</label><input type="number" id="r-moedas" step="0.01" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -759,8 +751,7 @@
         <div class="form-group"><label>Outros Tipos Apreensão</label><input type="number" id="r-outros-apreensao" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- TRÂNSITO (URBANO) — linhas 49–66 -->
-      <div class="section-label">🚗 TRÂNSITO (URBANO)</div>
+      <div class="section-label">¼ TRÂNSITO (URBANO)</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Acidentes de Trânsito SEM Vítima</label><input type="number" id="r-acid-sem-vitima" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
         <div class="form-group"><label>Acidente COM Vítima</label><input type="number" id="r-acid-vitima" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -781,7 +772,6 @@
         <div class="form-group"><label>Outro Documento Apreendido</label><input type="number" id="r-doc-apreend" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- VEÍCULO FISCALIZADOS (NÃO REMOVIDOS) — linhas 67–72 -->
       <div class="section-label">🚘 VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Auto</label><input type="number" id="r-vf-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -791,7 +781,6 @@
         <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vf-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- VEÍCULO REMOVIDO — linhas 73–78 -->
       <div class="section-label">🚘 VEÍCULO REMOVIDO</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Auto</label><input type="number" id="r-vr-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -801,7 +790,6 @@
         <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vr-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- VEÍCULO LOCALIZADO — linhas 79–84 -->
       <div class="section-label">🚘 VEÍCULO LOCALIZADO</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Auto</label><input type="number" id="r-vl-auto" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -811,7 +799,6 @@
         <div class="form-group"><label>Outro tipo de Veículo</label><input type="number" id="r-vl-outro" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- BOMBEIROS — linhas 85–90 -->
       <div class="section-label">🚒 BOMBEIROS</div>
       <div class="form-grid-4">
         <div class="form-group"><label>Incêndio</label><input type="number" id="r-incendio" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
@@ -821,7 +808,6 @@
         <div class="form-group"><label>Resgate</label><input type="number" id="r-resgate" min="0" value="0" onfocus="if(this.value=='0')this.value=''" onblur="if(this.value=='')this.value='0'" /></div>
       </div>
 
-      <!-- RODAPÉ — linhas 91–93 -->
       <div class="section-label">📝 Encerramento do Turno</div>
       <div class="form-grid-2">
         <div class="form-group">
@@ -857,7 +843,6 @@
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
 <div id="page-admin" class="page">
   <div class="main-container">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
@@ -869,14 +854,31 @@
     
     <div class="tab-bar">
       <button class="tab active" onclick="setAdminTab('admin-usuarios')">Usuários</button>
+      <button class="tab" onclick="setAdminTab('admin-estatisticas')">Painel Estatístico</button>
     </div>
+
     <div id="admin-usuarios" class="tab-panel active">
       <div id="lista-usuarios"></div>
+    </div>
+
+    <div id="admin-estatisticas" class="tab-panel">
+      <div class="filter-bar" style="margin-top:0; margin-bottom: 2rem;">
+        <div class="form-group">
+          <label>Data Início</label>
+          <input type="date" id="stats-data-inicio">
+        </div>
+        <div class="form-group">
+          <label>Data Fim</label>
+          <input type="date" id="stats-data-fim">
+        </div>
+        <button class="btn-secondary" onclick="renderAdminStats()">Filtrar Painel</button>
+      </div>
+      
+      <div id="analytics-container"></div>
     </div>
   </div>
 </div>
 
-<!-- MODAL EXPORTAR -->
 <div class="modal-overlay" id="modal-exportar">
   <div class="modal" style="max-width:440px">
     <button class="modal-close" onclick="fecharModal('modal-exportar')">✕</button>
@@ -912,7 +914,6 @@
   </div>
 </div>
 
-<!-- MODAL DETALHES -->
 <div class="modal-overlay" id="modal-detalhe">
   <div class="modal">
     <button class="modal-close" onclick="fecharModal('modal-detalhe')">✕</button>
@@ -922,7 +923,6 @@
   </div>
 </div>
 
-<!-- MODAL CONFIRMAR EXCLUSÃO -->
 <div class="modal-overlay" id="modal-excluir">
   <div class="modal" style="max-width:400px">
     <button class="modal-close" onclick="fecharModal('modal-excluir')">✕</button>
@@ -936,14 +936,12 @@
   </div>
 </div>
 
-<!-- NOTIF CONTAINER -->
 <div id="notif-container"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // =====================================================================
-// ⚙️  CONFIGURAÇÃO SUPABASE — edite as 2 linhas abaixo
-//     Onde encontrar: supabase.com → seu projeto → Settings → API
+// CONFIGURAÇÃO SUPABASE
 // =====================================================================
 const SUPABASE_URL = 'https://pahuwyialgafhxgrlehm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhaHV3eWlhbGdhZmh4Z3JsZWhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzOTE3MzUsImV4cCI6MjA4ODk2NzczNX0.ECKVNz5aoWpnIS9SzHXhwrfGYj0tizJcoFQUgVNnbbA';
@@ -957,15 +955,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   }
 });
 
+// Cache global de gráficos para reinicialização correta
+window.activeCharts = {};
+
 // ===================== DIAGNÓSTICO INICIAL =====================
-// Verifica credenciais e conectividade ao carregar a página
 async function diagnosticar() {
-  // Credenciais ainda são padrão?
   if (SUPABASE_URL.includes('SEU_PROJECT_ID') || SUPABASE_KEY.includes('SUA_ANON')) {
     mostrarTelaDiagnostico('credenciais');
     return false;
   }
-  // Testa conexão real com o banco
   try {
     const { error } = await sb.from('usuarios').select('id').limit(1);
     if (error) {
@@ -985,42 +983,21 @@ function mostrarTelaDiagnostico(tipo, detalhe = '') {
       icon: '🔑',
       titulo: 'Credenciais não configuradas',
       corpo: `
-        <p>Abra o arquivo <code>operacao_impacto.html</code> num editor de texto e substitua:</p>
-        <div class="diag-code">const SUPABASE_URL = '<strong>https://xxxx.supabase.co</strong>';<br>const SUPABASE_KEY = '<strong>eyJhbGci...sua_chave</strong>';</div>
-        <p style="margin-top:1rem"><strong>Onde encontrar:</strong></p>
-        <ol style="margin-left:1.2rem;line-height:2">
-          <li>Acesse <a href="https://supabase.com" target="_blank" style="color:var(--dourado)">supabase.com</a> → seu projeto</li>
-          <li>Clique em <strong>Settings</strong> (ícone de engrenagem)</li>
-          <li>Clique em <strong>API</strong></li>
-          <li>Copie a <strong>Project URL</strong> e a chave <strong>anon / public</strong></li>
-        </ol>`,
+        <p>Abra o arquivo <code>operacao_impacto.html</code> num editor de texto e substitua as constantes do Supabase.</p>`,
     },
     conexao: {
       icon: '🔌',
       titulo: 'Erro de conexão com o banco',
       corpo: `
         <p>As credenciais foram encontradas mas o banco retornou erro:</p>
-        <div class="diag-code">${detalhe}</div>
-        <p style="margin-top:1rem"><strong>Possíveis causas:</strong></p>
-        <ul style="margin-left:1.2rem;line-height:2">
-          <li>O script SQL ainda não foi executado no Supabase (SQL Editor → cole o supabase_setup.sql)</li>
-          <li>A chave copiada é a <strong>service_role</strong> em vez da <strong>anon/public</strong></li>
-          <li>O projeto Supabase está pausado (plano gratuito pausa após inatividade)</li>
-          <li>RLS habilitado mas sem políticas — execute novamente o script SQL completo</li>
-        </ul>`,
+        <div class="diag-code">${detalhe}</div>`,
     },
     rede: {
       icon: '🌐',
       titulo: 'Erro de rede / CORS',
       corpo: `
         <p>Não foi possível alcançar o servidor Supabase.</p>
-        <div class="diag-code">${detalhe}</div>
-        <p style="margin-top:1rem"><strong>Verifique:</strong></p>
-        <ul style="margin-left:1.2rem;line-height:2">
-          <li>Se você está abrindo o arquivo direto (file://), tente usar um servidor local como o <strong>Live Server</strong> do VS Code</li>
-          <li>Sua conexão com a internet está funcionando</li>
-          <li>O domínio do arquivo está na lista de <strong>Allowed Origins</strong> no Supabase (Settings → API → CORS)</li>
-        </ul>`,
+        <div class="diag-code">${detalhe}</div>`,
     },
   };
   const m = msgs[tipo];
@@ -1029,9 +1006,7 @@ function mostrarTelaDiagnostico(tipo, detalhe = '') {
       body{background:#0a1628;color:#d0daf0;font-family:'Exo 2',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
       .diag-card{background:#122040;border:1px solid rgba(201,162,39,0.3);padding:2.5rem;max-width:640px;width:100%;border-radius:4px}
       .diag-card h2{font-family:'Rajdhani',sans-serif;color:#c9a227;font-size:1.5rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
-      .diag-card p{font-size:.9rem;line-height:1.7;margin-bottom:.5rem;color:#b0bcd0}
       .diag-code{background:#060e1f;border:1px solid rgba(201,162,39,.2);padding:.75rem 1rem;font-family:monospace;font-size:.82rem;color:#e8c050;margin:.75rem 0;word-break:break-all;border-radius:2px}
-      ol,ul{color:#8a9bb5;font-size:.88rem}
       .diag-btn{margin-top:1.5rem;background:#c9a227;border:none;color:#0a1628;padding:.75rem 2rem;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:.08em;border-radius:2px}
     </style>
     <div class="diag-card">
@@ -1045,7 +1020,7 @@ function mostrarTelaDiagnostico(tipo, detalhe = '') {
 let currentUser = null;
 let currentPage = 'login';
 let currentTab  = 'tab-hoje';
-let currentAdminTab = 'admin-pendentes';
+let currentAdminTab = 'admin-usuarios';
 let editandoId  = null;
 let _registrosCache = [];
 let _usuariosCache  = [];
@@ -1080,56 +1055,52 @@ function hideLoading() {
   if (el) el.style.display = 'none';
 }
 
-// ===================== MAPEAMENTO DB → APP =====================
-// Converte linha do banco (colunas flat) para objeto aninhado usado pelo UI
+// ===================== MAPEAMENTO DB APP =====================
 function dbParaApp(r) {
   return {
-    id:            r.id,
-    data:          r.data,
-    turno:         r.turno,
-    unidade:       r.unidade,
-    status:        r.status,
-    operadorId:    r.operador_id,
-    operadorNome:  r.operador_nome,
-    criadoEm:      r.criado_em,
-    validadoEm:    r.validado_em,
-    validadoPor:   r.validado_por,
-    editadoEm:     r.editado_em,
-    editadoPor:    r.editado_por,
-    elaboradoPor:  r.elaborado_por,
-    conferidoPor:  r.conferido_por,
-    emailRemetente:r.email_remetente,
-    obs:           r.obs,
+    id:             r.id,
+    data:           r.data,
+    turno:          r.turno,
+    unidade:        r.unidade,
+    status:         r.status,
+    operadorId:     r.operador_id,
+    operadorNome:   r.operador_nome,
+    criadoEm:       r.criado_em,
+    validadoEm:     r.validado_em,
+    validadoPor:    r.validado_por,
+    editadoEm:      r.editado_em,
+    editadoPor:     r.editado_por,
+    elaboradoPor:   r.elaborado_por,
+    conferidoPor:   r.conferido_por,
+    emailRemetente: r.email_remetente,
+    obs:            r.obs,
     dados: {
       operacao: {
-        abordadas:      r.op_abordadas,    estabCom:       r.op_estab_com,
+        abordadas:       r.op_abordadas,   estabCom:       r.op_estab_com,
         ocorrDP:        r.op_ocorr_dp,     bopm:           r.op_bopm,
         raia:           r.op_raia,         mandado:        r.op_mandado,
         atoInfracional: r.op_ato_infracional, crimeExc:    r.op_crime_exc,
-        trafico:        r.op_trafico,
-        ocorrAtendidas:   r.op_ocorr_atendidas,
+        trafico:        r.op_trafico,      ocorrAtendidas: r.op_ocorr_atendidas,
         efefivoEmpregado: r.op_efetivo_empregado,
       },
       pessoas: {
         presas:          r.ps_presas,      adolSindicados:  r.ps_adol_sindicados,
         adolApreendidos: r.ps_adol_apreendidos, procurados: r.ps_procurados,
-        manifestantes:   r.ps_manifestantes,
-        pessoasAbordadas: r.ps_pessoas_abordadas,
+        manifestantes:   r.ps_manifestantes,   pessoasAbordadas: r.ps_pessoas_abordadas,
       },
       drogas: {
         cocaina: r.dr_cocaina,  crack: r.dr_crack,  maconha: r.dr_maconha,
-        heroina: r.dr_heroina,  outraDrogaKg: r.dr_outra_droga_kg,
-        outraDrogaQtde: r.dr_outra_droga_qtde,
+        heroina: r.dr_heroina,  outraDrogaKg: r.dr_outra_droga_kg, outraDrogaQtde: r.dr_outra_droga_qtde,
       },
       belico: {
         armaBranca:       r.bl_arma_branca,    armaPermitida:    r.bl_arma_permitida,
         armaRestrita:     r.bl_arma_restrita,  municaoPermitida: r.bl_municao_permitida,
-        municaoRestrita:  r.bl_municao_restrita, explosivo:      r.bl_explosivo,
+        municaoRestrita:  r.bl_municao_restrita, explosivo:       r.bl_explosivo,
         outroBelico:      r.bl_outro_belico,
       },
       apreensoes: {
-        moedas: r.ap_moedas,  medicamento: r.ap_medicamento, cigarro:    r.ap_cigarro,
-        eletronico: r.ap_eletronico, quimico: r.ap_quimico,  descaminho: r.ap_descaminho,
+        moedas: r.ap_moedas,  medicamento: r.ap_medicamento, cigarette: r.ap_cigarro, // ajustado map interno
+        cigarro: r.ap_cigarro, eletronico: r.ap_eletronico, quimico: r.ap_quimico,  descaminho: r.ap_descaminho,
         outrosApreensao: r.ap_outros,
       },
       transito: {
@@ -1138,8 +1109,7 @@ function dbParaApp(r) {
         aitDemais: r.tr_ait_demais, ait165: r.tr_ait165, ait165a: r.tr_ait165a,
         ait228: r.tr_ait228, ait253a: r.tr_ait253a, bloqueios: r.tr_bloqueios,
         pontosVis: r.tr_pontos_vis, condutores: r.tr_condutores, bafometro: r.tr_bafometro,
-        flagrante306: r.tr_flagrante306, cla: r.tr_cla, cnh: r.tr_cnh,
-        docApreend: r.tr_doc_apreend,
+        flagrante306: r.tr_flagrante306, cla: r.tr_cla, cnh: r.tr_cnh, docApreend: r.tr_doc_apreend,
       },
       veicFiscalizado: { auto: r.vf_auto, moto: r.vf_moto, coletivo: r.vf_coletivo, carga: r.vf_carga, outro: r.vf_outro },
       veicRemovido:    { auto: r.vr_auto, moto: r.vr_moto, coletivo: r.vr_coletivo, carga: r.vr_carga, outro: r.vr_outro },
@@ -1152,58 +1122,40 @@ function dbParaApp(r) {
   };
 }
 
-// Converte campos do formulário para objeto flat do banco
 function formParaDB(g, gi, gs, data, turno, unidade) {
   return {
     data, turno, unidade,
     elaborado_por:   gs('r-elaborado-por'),
     conferido_por:   gs('r-conferido-por'),
     email_remetente: gs('r-email-remetente'),
-    obs:             gs('r-obs'),
-    // OPERAÇÃO
+    obs:              gs('r-obs'),
     op_abordadas: gi('r-abordadas'),   op_estab_com: gi('r-estab-com'),
     op_ocorr_dp:  gi('r-ocorr-dp'),   op_bopm:      gi('r-bopm'),
     op_raia:      gi('r-raia'),        op_mandado:   gi('r-mandado'),
     op_ato_infracional: gi('r-ato-inf'), op_crime_exc: gi('r-crime-exc'),
-    op_trafico:   gi('r-trafico'),
-    op_ocorr_atendidas:   gi('r-ocorr-atendidas'),
+    op_trafico:   gi('r-trafico'),     op_ocorr_atendidas:   gi('r-ocorr-atendidas'),
     op_efetivo_empregado: gi('r-efetivo-empregado'),
-    // PESSOAS
     ps_presas: gi('r-presas'), ps_adol_sindicados: gi('r-adol-sind'),
     ps_adol_apreendidos: gi('r-adol-apreend'), ps_procurados: gi('r-procurados'),
     ps_manifestantes: gi('r-manifestantes'),
-    // DROGAS
     dr_cocaina: g('r-cocaina'),   dr_crack: g('r-crack'),  dr_maconha: g('r-maconha'),
-    dr_heroina: g('r-heroina'),   dr_outra_droga_kg: g('r-outra-droga-kg'),
-    dr_outra_droga_qtde: gi('r-outra-droga-qtde'),
-    // BÉLICO
+    dr_heroina: g('r-heroina'),   dr_outra_droga_kg: g('r-outra-droga-kg'), dr_outra_droga_qtde: gi('r-outra-droga-qtde'),
     bl_arma_branca: gi('r-arma-branca'), bl_arma_permitida: gi('r-arma-perm'),
     bl_arma_restrita: gi('r-arma-rest'), bl_municao_permitida: gi('r-mun-perm'),
-    bl_municao_restrita: gi('r-mun-rest'), bl_explosivo: gi('r-explosivo'),
-    bl_outro_belico: gi('r-outro-belico'),
-    // APREENSÕES
+    bl_municao_restrita: gi('r-mun-rest'), bl_explosivo: gi('r-explosivo'), bl_outro_belico: gi('r-outro-belico'),
     ap_moedas: g('r-moedas'),  ap_medicamento: gi('r-medicamento'), ap_cigarro: gi('r-cigarro'),
-    ap_eletronico: gi('r-eletronico'), ap_quimico: gi('r-quimico'),
-    ap_descaminho: gi('r-descaminho'), ap_outros: gi('r-outros-apreensao'),
-    // TRÂNSITO
+    ap_eletronico: gi('r-eletronico'), ap_quimico: gi('r-quimico'), ap_descaminho: gi('r-descaminho'), ap_outros: gi('r-outros-apreensao'),
     tr_acid_sem_vitima: gi('r-acid-sem-vitima'), tr_acid_com_vitima: gi('r-acid-vitima'),
     tr_vitima_nao_fatal: gi('r-vitima-nao-fatal'), tr_vitima_fatal: gi('r-vitima-fatal'),
     tr_ait_demais: gi('r-ait-demais'), tr_ait165: gi('r-ait165'), tr_ait165a: gi('r-ait165a'),
     tr_ait228: gi('r-ait228'), tr_ait253a: gi('r-ait253a'), tr_bloqueios: gi('r-bloqueios'),
-    tr_pontos_vis: gi('r-pontos-vis'), tr_condutores: gi('r-condutores'),
-    tr_bafometro: gi('r-bafometro'), tr_flagrante306: gi('r-flagrante306'),
-    tr_cla: gi('r-cla'), tr_cnh: gi('r-cnh'), tr_doc_apreend: gi('r-doc-apreend'),
-    // VEÍCULOS
-    vf_auto: gi('r-vf-auto'), vf_moto: gi('r-vf-moto'), vf_coletivo: gi('r-vf-coletivo'),
-    vf_carga: gi('r-vf-carga'), vf_outro: gi('r-vf-outro'),
-    vr_auto: gi('r-vr-auto'), vr_moto: gi('r-vr-moto'), vr_coletivo: gi('r-vr-coletivo'),
-    vr_carga: gi('r-vr-carga'), vr_outro: gi('r-vr-outro'),
-    vl_auto: gi('r-vl-auto'), vl_moto: gi('r-vl-moto'), vl_coletivo: gi('r-vl-coletivo'),
-    vl_carga: gi('r-vl-carga'), vl_outro: gi('r-vl-outro'),
-    // BOMBEIROS
-    bm_incendio: gi('r-incendio'), bm_salvamento: gi('r-salvamento'),
-    bm_resgate: gi('r-resgate'),   bm_afogamento: gi('r-afogamento'),
-    bm_conducao_ps: gi('r-conducao-ps'),
+    tr_pontos_vis: gi('r-pontos-vis'), tr_condutores: gi('r-condutores'), tr_bafometro: gi('r-bafometro'),
+    tr_flagrante306: gi('r-flagrante306'), tr_cla: gi('r-cla'), tr_cnh: gi('r-cnh'), tr_doc_apreend: gi('r-doc-apreend'),
+    vf_auto: gi('r-vf-auto'), vf_moto: gi('r-vf-moto'), vf_coletivo: gi('r-vf-coletivo'), vf_carga: gi('r-vf-carga'), vf_outro: gi('r-vf-outro'),
+    vr_auto: gi('r-vr-auto'), vr_moto: gi('r-vr-moto'), vr_coletivo: gi('r-vr-coletivo'), vr_carga: gi('r-vr-carga'), vr_outro: gi('r-vr-outro'),
+    vl_auto: gi('r-vl-auto'), vl_moto: gi('r-vl-moto'), vl_coletivo: gi('r-vl-coletivo'), vl_carga: gi('r-vl-carga'), vl_outro: gi('r-vl-outro'),
+    bm_incendio: gi('r-incendio'), bm_salvamento: gi('r-salvamento'), bm_resgate: gi('r-resgate'),
+    bm_afogamento: gi('r-afogamento'), bm_conducao_ps: gi('r-conducao-ps'),
   };
 }
 
@@ -1223,8 +1175,6 @@ async function fazerLogin() {
   showLoading('Autenticando...');
   try {
     let loginEmail = entrada;
-
-    // Login por R.E.: busca e-mail sem exigir auth (usando service ou anon com RLS público em select)
     if (!entrada.includes('@')) {
       const { data: u, error: eu } = await sb
         .from('usuarios').select('email').eq('matricula', entrada).maybeSingle();
@@ -1239,21 +1189,18 @@ async function fazerLogin() {
     const { data, error } = await sb.auth.signInWithPassword({ email: loginEmail, password: senha });
     if (error) {
       hideLoading();
-      // Mensagens de erro traduzidas
       const erros = {
         'Invalid login credentials': 'E-mail/R.E. ou senha incorretos.',
-        'Email not confirmed': 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
+        'Email not confirmed': 'Confirme seu e-mail antes de entrar.',
         'Too many requests': 'Muitas tentativas. Aguarde alguns minutos.',
       };
       notif(erros[error.message] || error.message, 'error');
       return;
     }
-
     await carregarPerfil(data.user.id);
   } catch(e) {
     hideLoading();
-    console.error('[Login]', e);
-    notif('Erro de conexão. Verifique o console (F12).', 'error');
+    notif('Erro de conexão.', 'error');
   }
 }
 
@@ -1272,7 +1219,6 @@ async function fazerCadastro() {
 
   showLoading('Criando conta...');
   try {
-    // 1. Criar usuário no Supabase Auth
     const { data: authData, error: authError } = await sb.auth.signUp({
       email, password: senha,
       options: { data: { nome, matricula: mat, posto, unidade } }
@@ -1282,7 +1228,7 @@ async function fazerCadastro() {
       hideLoading();
       const erros = {
         'User already registered': 'Este e-mail já está cadastrado.',
-        'Password should be at least 6 characters': 'Senha muito curta (mínimo 6 caracteres).',
+        'Password should be at least 6 characters': 'Senha muito curta.',
         'Unable to validate email address: invalid format': 'E-mail inválido.',
       };
       notif(erros[authError.message] || authError.message, 'error');
@@ -1292,47 +1238,28 @@ async function fazerCadastro() {
     const authId = authData.user?.id;
     if (!authId) {
       hideLoading();
-      notif('Conta criada! Verifique seu e-mail para confirmar antes de entrar.', 'info');
+      notif('Conta criada! Confirme seu e-mail.', 'info');
       toggleCadastro();
       return;
     }
 
-    // 2. Inserir perfil na tabela usuarios — ativo=false até admin liberar
-    const { error: insertError } = await sb.from('usuarios').insert({
-      auth_id:   authId,
-      nome,
-      matricula: mat,
-      posto,
-      unidade,
-      email,
-      perfil: 'operador',
-      ativo:  false,
+    await sb.from('usuarios').insert({
+      auth_id: authId, nome, matricula: mat, posto, unidade, email, perfil: 'operador', ativo: false,
     });
 
-    // Ignorar erro de duplicata (trigger já inseriu)
-    if (insertError && !insertError.message.includes('duplicate')) {
-      console.warn('[Cadastro] Aviso ao inserir perfil:', insertError.message);
-    }
-
-    // 3. Deslogar imediatamente — acesso só após admin liberar
     await sb.auth.signOut();
     hideLoading();
 
-    // 4. Limpar formulário e voltar ao login com mensagem
     document.getElementById('cad-nome').value     = '';
     document.getElementById('cad-matricula').value = '';
-    document.getElementById('cad-posto').value     = '';
-    document.getElementById('cad-unidade').value   = '';
     document.getElementById('cad-email').value     = '';
     document.getElementById('cad-senha').value     = '';
 
-    toggleCadastro(); // volta ao formulário de login
-    notif('Cadastro realizado! Aguarde a liberação do seu acesso por um administrador.', 'success');
-
+    toggleCadastro();
+    notif('Aguarde a liberação do seu acesso por um administrador.', 'success');
   } catch(e) {
     hideLoading();
-    console.error('[Cadastro]', e);
-    notif('Erro inesperado. Veja o console (F12).', 'error');
+    notif('Erro inesperado.', 'error');
   }
 }
 
@@ -1342,35 +1269,25 @@ async function carregarPerfil(authId) {
       .from('usuarios').select('*').eq('auth_id', authId).maybeSingle();
 
     if (perfil) {
-      // Verificar se conta está ativa
       if (!perfil.ativo) {
         hideLoading();
         await sb.auth.signOut();
-        notif('Seu acesso ainda não foi liberado. Aguarde a aprovação de um administrador.', 'error');
+        notif('Seu acesso ainda não foi liberado.', 'error');
         return;
       }
 
       currentUser = {
-        id:        perfil.id,
-        authId:    perfil.auth_id,
-        nome:      perfil.nome,
-        matricula: perfil.matricula,
-        posto:     perfil.posto,
-        unidade:   perfil.unidade,
-        email:     perfil.email,
-        perfil:    perfil.perfil,
-        ativo:     perfil.ativo,
+        id: perfil.id, authId: perfil.auth_id, nome: perfil.nome, matricula: perfil.matricula,
+        posto: perfil.posto, unidade: perfil.unidade, email: perfil.email, perfil: perfil.perfil, ativo: perfil.ativo,
       };
       hideLoading();
       iniciarSessao();
       return;
     }
-
     if (tentativa < 3) await new Promise(r => setTimeout(r, 600));
   }
-
   hideLoading();
-  notif('Perfil não encontrado. Contate o administrador.', 'error');
+  notif('Perfil não encontrado.', 'error');
   await sb.auth.signOut();
 }
 
@@ -1403,7 +1320,6 @@ async function logout() {
   goPage('login');
 }
 
-// Verificar sessão existente + diagnóstico ao carregar
 (async function inicializar() {
   const ok = await diagnosticar();
   if (!ok) return;
@@ -1426,14 +1342,6 @@ function closeMobileNav() {
   document.getElementById('mobile-nav').classList.remove('open');
   document.getElementById('hamburger-btn').classList.remove('open');
 }
-// Close mobile nav on outside click
-document.addEventListener('click', e => {
-  const nav = document.getElementById('mobile-nav');
-  const btn = document.getElementById('hamburger-btn');
-  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
-    closeMobileNav();
-  }
-});
 
 // ===================== NAVIGATION =====================
 function goPage(page) {
@@ -1464,7 +1372,9 @@ function setAdminTab(tabId) {
   document.querySelectorAll('#page-admin .tab-panel').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById(tabId).classList.add('active');
+  currentAdminTab = tabId;
   if (tabId === 'admin-usuarios') renderUsuarios();
+  if (tabId === 'admin-estatisticas') renderAdminStats();
 }
 
 // ===================== FORM =====================
@@ -1496,31 +1406,29 @@ function editarRegistro(id) {
   const r = _registrosCache.find(x => x.id === id);
   if (!r) return;
   if (r.status === 'Registrado' && currentUser.perfil !== 'admin') {
-    notif('Registro validado não pode ser editado por operadores.', 'error'); return;
+    notif('Registro validado não pode ser editado.', 'error'); return;
   }
   const d = r.dados;
   const sv = (id, val) => { const el = document.getElementById(id); if(el) el.value = val ?? 0; };
   const ss = (id, val) => { const el = document.getElementById(id); if(el) el.value = val ?? ''; };
   ss('r-data', r.data); ss('r-turno', r.turno); ss('r-unidade', r.unidade);
-  sv('r-abordadas',  d.operacao.abordadas);   sv('r-estab-com',  d.operacao.estabCom);
-  sv('r-ocorr-dp',   d.operacao.ocorrDP);     sv('r-bopm',       d.operacao.bopm);
-  sv('r-raia',       d.operacao.raia);         sv('r-mandado',    d.operacao.mandado);
-  sv('r-ato-inf',    d.operacao.atoInfracional); sv('r-crime-exc', d.operacao.crimeExc);
-  sv('r-trafico',    d.operacao.trafico);
-  sv('r-presas',       d.pessoas.presas);     sv('r-adol-sind',    d.pessoas.adolSindicados);
+  sv('r-abordadas',      d.operacao.abordadas);   sv('r-estab-com',  d.operacao.estabCom);
+  sv('r-ocorr-dp',      d.operacao.ocorrDP);     sv('r-bopm',       d.operacao.bopm);
+  sv('r-raia',           d.operacao.raia);         sv('r-mandado',    d.operacao.mandado);
+  sv('r-ato-inf',     d.operacao.atoInfracional); sv('r-crime-exc', d.operacao.crimeExc);
+  sv('r-trafico',     d.operacao.trafico);       sv('r-ocorr-atendidas', d.operacao.ocorrAtendidas);
+  sv('r-efetivo-empregado', d.operacao.efefivoEmpregado);
+  sv('r-presas',         d.pessoas.presas);       sv('r-adol-sind',    d.pessoas.adolSindicados);
   sv('r-adol-apreend', d.pessoas.adolApreendidos); sv('r-procurados', d.pessoas.procurados);
   sv('r-manifestantes',d.pessoas.manifestantes);
   sv('r-cocaina', d.drogas.cocaina); sv('r-crack', d.drogas.crack); sv('r-maconha', d.drogas.maconha);
-  sv('r-heroina', d.drogas.heroina); sv('r-outra-droga-kg', d.drogas.outraDrogaKg);
-  sv('r-outra-droga-qtde', d.drogas.outraDrogaQtde);
+  sv('r-heroina', d.drogas.heroina); sv('r-outra-droga-kg', d.drogas.outraDrogaKg); sv('r-outra-droga-qtde', d.drogas.outraDrogaQtde);
   sv('r-arma-branca', d.belico.armaBranca); sv('r-arma-perm', d.belico.armaPermitida);
   sv('r-arma-rest', d.belico.armaRestrita); sv('r-mun-perm', d.belico.municaoPermitida);
-  sv('r-mun-rest', d.belico.municaoRestrita); sv('r-explosivo', d.belico.explosivo);
-  sv('r-outro-belico', d.belico.outroBelico);
+  sv('r-mun-rest', d.belico.municaoRestrita); sv('r-explosivo', d.belico.explosivo); sv('r-outro-belico', d.belico.outroBelico);
   sv('r-moedas', d.apreensoes.moedas); sv('r-medicamento', d.apreensoes.medicamento);
   sv('r-cigarro', d.apreensoes.cigarro); sv('r-eletronico', d.apreensoes.eletronico);
-  sv('r-quimico', d.apreensoes.quimico); sv('r-descaminho', d.apreensoes.descaminho);
-  sv('r-outros-apreensao', d.apreensoes.outrosApreensao);
+  sv('r-quimico', d.apreensoes.quimico); sv('r-descaminho', d.apreensoes.descaminho); sv('r-outros-apreensao', d.apreensoes.outrosApreensao);
   sv('r-acid-sem-vitima', d.transito.acidenteSemVitima); sv('r-acid-vitima', d.transito.acidenteComVitima);
   sv('r-vitima-nao-fatal', d.transito.vtimaNaoFatal); sv('r-vitima-fatal', d.transito.vtimaFatal);
   sv('r-ait-demais', d.transito.aitDemais); sv('r-ait165', d.transito.ait165);
@@ -1536,8 +1444,7 @@ function editarRegistro(id) {
   sv('r-vl-auto', d.veicLocalizado.auto); sv('r-vl-moto', d.veicLocalizado.moto);
   sv('r-vl-coletivo', d.veicLocalizado.coletivo); sv('r-vl-carga', d.veicLocalizado.carga); sv('r-vl-outro', d.veicLocalizado.outro);
   sv('r-incendio', d.bombeiros.incendio); sv('r-salvamento', d.bombeiros.salvamento);
-  sv('r-resgate', d.bombeiros.resgate); sv('r-afogamento', d.bombeiros.afogamento);
-  sv('r-conducao-ps', d.bombeiros.conducaoPS);
+  sv('r-resgate', d.bombeiros.resgate); sv('r-afogamento', d.bombeiros.afogamento); sv('r-conducao-ps', d.bombeiros.conducaoPS);
   ss('r-elaborado-por', r.elaboradoPor); ss('r-conferido-por', r.conferidoPor);
   ss('r-email-remetente', r.emailRemetente); ss('r-obs', r.obs);
   editandoId = id;
@@ -1551,7 +1458,7 @@ function confirmarExclusao(id) {
   if (!r) return;
   document.getElementById('excluir-info').innerHTML =
     `<strong>${fmtData(r.data)}</strong> · ${badgeTurno(r.turno)} · ${r.unidade}<br>
-     <span style="color:var(--cinza);font-size:0.78rem">Operador: ${r.operadorNome} · ${badgeStatus(r.status)}</span>`;
+     <span style="color:var(--cinza);font-size:0.78rem">Operador: ${r.operadorNome}</span>`;
   document.getElementById('btn-confirmar-excluir').onclick = () => excluirRegistro(id);
   abrirModal('modal-excluir');
 }
@@ -1562,7 +1469,7 @@ async function excluirRegistro(id) {
   hideLoading();
   if (error) { notif('Erro ao excluir registro.', 'error'); return; }
   fecharModal('modal-excluir');
-  notif('Registro excluído com sucesso.', 'info');
+  notif('Registro excluído.', 'info');
   if (currentPage === 'dashboard') await renderDashboard();
   if (currentPage === 'admin') await renderAdmin();
 }
@@ -1582,44 +1489,33 @@ async function salvarRegistro() {
   showLoading(editandoId ? 'Salvando alterações...' : 'Enviando registro...');
 
   if (editandoId) {
-    const old = _registrosCache.find(x => x.id === editandoId);
-    const novoStatus = 'Registrado';
     const { error } = await sb.from('registros').update({
-      ...payload,
-      status:      novoStatus,
-      editado_em:  new Date().toISOString(),
-      editado_por: currentUser.nome,
+      ...payload, status: 'Registrado', editado_em: new Date().toISOString(), editado_por: currentUser.nome,
     }).eq('id', editandoId);
 
     hideLoading();
-    if (error) { notif('Erro ao atualizar registro: ' + error.message, 'error'); return; }
-    notif('Registro atualizado com sucesso!', 'success');
+    if (error) { notif('Erro ao atualizar: ' + error.message, 'error'); return; }
+    notif('Registro atualizado!', 'success');
     editandoId = null;
     setEditMode(false);
   } else {
     const { error } = await sb.from('registros').insert({
-      ...payload,
-      operador_id:   currentUser.id,
-      operador_nome: `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`,
-      status: 'Validado',
+      ...payload, operador_id: currentUser.id, operador_nome: `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`, status: 'Validado',
     });
 
     hideLoading();
     if (error) { notif('Erro ao salvar registro: ' + error.message, 'error'); return; }
-    notif('Registro do turno salvo com sucesso!', 'success');
+    notif('Registro do turno salvo!', 'success');
   }
 
   limparForm();
   goPage('dashboard');
 }
 
-// ===================== RENDER =====================
+// ===================== RENDER FILTROS ATIVADOS =====================
 function badgeTurno(turno) {
   const map = { '00:00 - 06:00': 'badge-00', '06:00 - 18:00': 'badge-06', '18:00 - 00:00': 'badge-18' };
-  return `<span class="badge ${map[turno] || ''}">${turno}</span>`;
-}
-function badgeStatus(status) {
-  return `<span class="badge badge-validado">${status || 'Registrado'}</span>`;
+  return `<span class="badge ${map[turno] || 'badge-pendente'}">${turno}</span>`;
 }
 function fmtData(d) {
   if (!d) return '-';
@@ -1637,8 +1533,6 @@ function renderTabelaRegistros(registros, container, adminView = false) {
   let rows = registros.map(r => {
     const isAdmin    = currentUser.perfil === 'admin';
     const isOwner    = r.operadorId === currentUser.id;
-    const podeEditar  = isAdmin || isOwner;
-    const podeExcluir = isAdmin || isOwner;
     return `
     <tr>
       <td>${fmtData(r.data)}</td>
@@ -1650,8 +1544,8 @@ function renderTabelaRegistros(registros, container, adminView = false) {
       <td>${s(r,'belico.armaPermitida')+s(r,'belico.armaRestrita')}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         <button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="verDetalhes('${r.id}', ${adminView})">🔍</button>
-        ${podeEditar  ? `<button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;border-color:rgba(52,152,219,0.4);color:#3498db" onclick="editarRegistro('${r.id}')">✏️</button>` : ''}
-        ${podeExcluir ? `<button class="btn-danger" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="confirmarExclusao('${r.id}')">🗑️</button>` : ''}
+        ${(isAdmin || isOwner) ? `<button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;border-color:rgba(52,152,219,0.4);color:#3498db" onclick="editarRegistro('${r.id}')">✏️</button>` : ''}
+        ${(isAdmin || isOwner) ? `<button class="btn-danger" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="confirmarExclusao('${r.id}')">🗑️</button>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -1660,12 +1554,11 @@ function renderTabelaRegistros(registros, container, adminView = false) {
     <table class="registros-table">
       <thead><tr>
         <th>Data</th><th>Turno</th><th>Unidade</th><th>Operador</th>
-        <th>Presos</th><th>Tráfico</th><th>Armas</th><th>Ações</th>
+        <th>Prisões</th><th>Tráfico</th><th>Armas</th><th>Ações</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    </div>
-  `;
+    </div>`;
 }
 
 async function buscarRegistros() {
@@ -1709,8 +1602,7 @@ async function renderDashboard() {
       <div class="label">Oc. Tráfico</div>
       <div class="value">${totalTrafico}</div>
       <div class="sub">ocorrências</div>
-    </div>
-  `;
+    </div>`;
   renderHoje();
 }
 
@@ -1729,19 +1621,195 @@ function renderSemana() {
   renderTabelaRegistros(_registrosCache.filter(r => week.includes(r.data)), 'registros-semana');
 }
 
+/* ITEM 2 CONFIGURADO: FILTRO POR CIDADE/UNIDADE CORRIGIDO */
 function renderTodos() {
-  const filtData   = document.getElementById('filtro-data').value;
-  const filtTurno  = document.getElementById('filtro-turno').value;
-  const filtStatus = document.getElementById('filtro-status').value;
+  const filtData    = document.getElementById('filtro-data').value;
+  const filtTurno   = document.getElementById('filtro-turno').value;
+  const filtUnidade = document.getElementById('filtro-unidade').value;
+  
   let regs = [..._registrosCache];
-  if (filtData)   regs = regs.filter(r => r.data === filtData);
-  if (filtTurno)  regs = regs.filter(r => r.turno === filtTurno);
-  if (filtStatus) regs = regs.filter(r => r.status === filtStatus);
+  if (filtData)    regs = regs.filter(r => r.data === filtData);
+  if (filtTurno)   regs = regs.filter(r => r.turno === filtTurno);
+  if (filtUnidade) regs = regs.filter(r => r.unidade === filtUnidade);
+  
   renderTabelaRegistros(regs, 'registros-todos');
 }
 
 async function renderAdmin() {
-  await renderUsuarios();
+  if(currentAdminTab === 'admin-usuarios') await renderUsuarios();
+  if(currentAdminTab === 'admin-estatisticas') await renderAdminStats();
+}
+
+// ===================== CONTROLE ESTATÍSTICO DE ALTO NÍVEL (ITEM 3) =====================
+async function renderAdminStats() {
+  showLoading('Construindo relatórios avançados...');
+  const all = await buscarRegistros();
+  hideLoading();
+
+  const dataInicio = document.getElementById('stats-data-inicio').value;
+  const dataFim = document.getElementById('stats-data-fim').value;
+
+  let filtered = [...all];
+  if (dataInicio) filtered = filtered.filter(r => r.data >= dataInicio);
+  if (dataFim) filtered = filtered.filter(r => r.data <= dataFim);
+
+  const container = document.getElementById('analytics-container');
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><p>Nenhum registro encontrado no intervalo selecionado.</p></div>`;
+    return;
+  }
+
+  // Métricas Consolidadas
+  const s = (r, p) => { let v=r.dados; for(const k of p.split('.')) v=v?.[k]; return parseFloat(v)||0; };
+  const totalAbordados = filtered.reduce((acc, r) => acc + s(r, 'operacao.abordadas'), 0);
+  const totalPrisoes = filtered.reduce((acc, r) => acc + s(acc_r = r, 'pessoas.presas'), 0);
+  const totalArmas = filtered.reduce((acc, r) => acc + s(r, 'belico.armaPermitida') + s(r, 'belico.armaRestrita'), 0);
+  const totalOcorrencias = filtered.reduce((acc, r) => acc + s(r, 'operacao.ocorrAtendidas'), 0);
+
+  // Consolidação de Drogas (Kg)
+  const drogas = {
+    Cocaina: filtered.reduce((acc, r) => acc + s(r, 'drogas.cocaina'), 0),
+    Crack: filtered.reduce((acc, r) => acc + s(r, 'drogas.crack'), 0),
+    Maconha: filtered.reduce((acc, r) => acc + s(r, 'drogas.maconha'), 0),
+    Heroina: filtered.reduce((acc, r) => acc + s(r, 'drogas.heroina'), 0),
+  };
+
+  // Turnos Operacionais
+  const turnosMap = {};
+  filtered.forEach(r => { turnosMap[r.turno] = (turnosMap[r.turno] || 0) + 1; });
+
+  // Agrupamento por Cidades / Unidades
+  const cidadesData = {};
+  filtered.forEach(r => {
+    const cid = r.unidade || 'Não Especificada';
+    if (!cidadesData[cid]) {
+      cidadesData[cid] = { abordagens: 0, prisoes: 0, armas: 0, registros: 0 };
+    }
+    cidadesData[cid].abordagens += s(r, 'operacao.abordadas');
+    cidadesData[cid].prisoes += s(r, 'pessoas.presas');
+    cidadesData[cid].armas += (s(r, 'belico.armaPermitida') + s(r, 'belico.armaRestrita'));
+    cidadesData[cid].registros += 1;
+  });
+
+  // Renderização da Estrutura Visual do Painel Estatístico
+  container.innerHTML = `
+    <div class="dash-grid">
+      <div class="dash-card" style="--cor-destaque: var(--dourado)">
+        <div class="label">Abordagens Gerais</div>
+        <div class="value">${totalAbordados}</div>
+        <div class="sub">Cidadãos Fiscalizados</div>
+      </div>
+      <div class="dash-card" style="--cor-destaque: #e74c3c">
+        <div class="label">Prisões Efetuadas</div>
+        <div class="value">${totalPrisoes}</div>
+        <div class="sub">Infratores Capturados</div>
+      </div>
+      <div class="dash-card" style="--cor-destaque: #2ecc71">
+        <div class="label">Armas de Fogo</div>
+        <div class="value">${totalArmas}</div>
+        <div class="sub">Retiradas de Circulação</div>
+      </div>
+      <div class="dash-card" style="--cor-destaque: #3498db">
+        <div class="label">Atendimentos</div>
+        <div class="value">${totalOcorrencias}</div>
+        <div class="sub">Chamados Despachados</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-container">
+        <h4 style="font-family:'Rajdhani',sans-serif; color:var(--dourado); margin-bottom:1rem;">PRODUTIVIDADE CRÍTICA POR LOCALIDADE</h4>
+        <canvas id="chart-prod-cidades"></canvas>
+      </div>
+      <div class="chart-container">
+        <h4 style="font-family:'Rajdhani',sans-serif; color:var(--dourado); margin-bottom:1rem;">APREENSÃO DE ENTORPECENTES (KG)</h4>
+        <canvas id="chart-drogas-pizza"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid" style="grid-template-columns: 1fr;">
+       <div class="chart-container" style="min-height: 260px;">
+          <h4 style="font-family:'Rajdhani',sans-serif; color:var(--dourado); margin-bottom:1rem;">DISTRIBUIÇÃO DA CARGA OPERACIONAL POR TURNO</h4>
+          <canvas id="chart-turnos-linha"></canvas>
+       </div>
+    </div>
+
+    <div class="turno-card">
+      <div class="section-label" style="margin-top:0;">🏆 RANKING OPERACIONAL DAS CIDADES / UNIDADES</div>
+      <div style="overflow-x:auto; margin-top:1rem;">
+        <table class="registros-table">
+          <thead>
+            <tr>
+              <th>Cidade / Unidade</th>
+              <th>Registros Efetuados</th>
+              <th>Total Abordagens</th>
+              <th>Total Prisões</th>
+              <th>Armas Apreendidas</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.entries(cidadesData).sort((a,b) => b[1].prisoes - a[1].prisoes).map(([cidade, d]) => `
+              <tr>
+                <td style="font-weight:600; color:var(--branco);">${cidade}</td>
+                <td><span class="badge badge-00">${d.registros}</span></td>
+                <td>${d.abordagens}</td>
+                <td><span style="color:#e74c3c; font-weight:bold;">${d.prisoes}</span></td>
+                <td><span style="color:#2ecc71; font-weight:bold;">${d.armas}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Destruição de instâncias anteriores para evitar flickering
+  if (window.activeCharts['cidades']) window.activeCharts['cidades'].destroy();
+  if (window.activeCharts['drogas']) window.activeCharts['drogas'].destroy();
+  if (window.activeCharts['turnos']) window.activeCharts['turnos'].destroy();
+
+  // Injeção de Dados nos Gráficos (Chart.js)
+  const cidadesLabels = Object.keys(cidadesData);
+  window.activeCharts['cidades'] = new Chart(document.getElementById('chart-prod-cidades').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: cidadesLabels,
+      datasets: [
+        { label: 'Prisões', data: cidadesLabels.map(l => cidadesData[l].prisoes), backgroundColor: '#e74c3c' },
+        { label: 'Armas', data: cidadesLabels.map(l => cidadesData[l].armas), backgroundColor: '#2ecc71' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { x: { grid: { display: false }, ticks: { color: '#8a9bb5' } }, y: { grid: { color: 'rgba(201,162,39,0.1)' }, ticks: { color: '#8a9bb5' } } },
+      plugins: { legend: { labels: { color: '#d0daf0', font: { family: 'Exo 2' } } } }
+    }
+  });
+
+  window.activeCharts['drogas'] = new Chart(document.getElementById('chart-drogas-pizza').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(drogas),
+      datasets: [{ data: Object.values(drogas), backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71', '#9b59b6'], borderWidth: 1, borderColor: '#122040' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#d0daf0', font: { family: 'Exo 2' } } } }
+    }
+  });
+
+  window.activeCharts['turnos'] = new Chart(document.getElementById('chart-turnos-linha').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(turnosMap),
+      datasets: [{ label: 'Quantidade de Lançamentos', data: Object.values(turnosMap), backgroundColor: 'rgba(201,162,39,0.4)', borderColor: '#c9a227', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { color: '#8a9bb5' } }, y: { ticks: { color: '#8a9bb5' }, grid: { color: 'rgba(201,162,39,0.1)' } } },
+      plugins: { legend: { display: false } }
+    }
+  });
 }
 
 async function renderUsuarios() {
@@ -1752,30 +1820,18 @@ async function renderUsuarios() {
   const el = document.getElementById('lista-usuarios');
   if (error || !data?.length) { el.innerHTML = '<div class="empty-state"><p>Nenhum usuário encontrado.</p></div>'; return; }
 
-  // Separar pendentes de aprovação dos ativos
   const pendentes = data.filter(u => !u.ativo);
   const ativos    = data.filter(u => u.ativo);
 
   const renderLinha = (u) => {
     const isMe = u.id === currentUser.id;
-
-    // Botão de perfil
     const btnPerfil = u.perfil === 'admin'
-      ? (isMe
-          ? `<button class="btn-secondary" style="font-size:0.72rem;padding:0.3rem 0.7rem;opacity:0.5;cursor:default">Sua conta</button>`
-          : `<button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="rebaixarUsuario('${u.id}')">↓ Rebaixar</button>`)
+      ? (isMe ? `<button class="btn-secondary" style="font-size:0.72rem;padding:0.3rem 0.7rem;opacity:0.5;cursor:default">Sua conta</button>` : `<button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="rebaixarUsuario('${u.id}')">↓ Rebaixar</button>`)
       : `<button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="promoverUsuario('${u.id}')">↑ Admin</button>`;
 
-    // Botão de acesso (ativo/inativo)
-    const btnAcesso = isMe
-      ? ''
-      : u.ativo
+    const btnAcesso = isMe ? '' : u.ativo
         ? `<button class="btn-danger" style="font-size:0.72rem;padding:0.3rem 0.7rem" onclick="bloquearUsuario('${u.id}')">🔒 Bloquear</button>`
         : `<button class="btn-success" style="font-size:0.72rem;padding:0.3rem 0.7rem;background:#27ae60" onclick="liberarUsuario('${u.id}')">✅ Liberar</button>`;
-
-    const badgeAtivo = u.ativo
-      ? `<span class="badge badge-validado">Ativo</span>`
-      : `<span class="badge badge-rejeitado">Pendente</span>`;
 
     return `
     <tr style="${!u.ativo ? 'opacity:0.7;background:rgba(231,76,60,0.05)' : ''}">
@@ -1785,71 +1841,36 @@ async function renderUsuarios() {
       <td>${u.unidade}</td>
       <td>${u.email}</td>
       <td><span class="badge ${u.perfil === 'admin' ? 'badge-validado' : 'badge-pendente'}">${u.perfil}</span></td>
-      <td>${badgeAtivo}</td>
+      <td>${u.ativo ? '<span class="badge badge-validado">Ativo</span>' : '<span class="badge badge-rejeitado">Pendente</span>'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">${btnPerfil} ${btnAcesso}</td>
     </tr>`;
   };
 
-  // Badge de pendentes no topo
-  const alertaPendentes = pendentes.length > 0
-    ? `<div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);
-        border-radius:4px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;
-        align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-        <span style="color:#e74c3c;font-weight:600">⏳ ${pendentes.length} usuário${pendentes.length>1?'s':''} aguardando liberação de acesso</span>
-        <span style="font-size:0.8rem;color:var(--cinza)">Revise abaixo e clique em ✅ Liberar para conceder acesso</span>
-      </div>`
-    : '';
-
-  el.innerHTML = alertaPendentes + `
+  el.innerHTML = `
     <div style="overflow-x:auto">
     <table class="registros-table">
-      <thead><tr>
-        <th>R.E.</th><th>Nome</th><th>Posto</th><th>Unidade</th>
-        <th>E-mail</th><th>Perfil</th><th>Acesso</th><th>Ações</th>
-      </tr></thead>
-      <tbody>
-        ${[...pendentes, ...ativos].map(renderLinha).join('')}
-      </tbody>
+      <thead><tr><th>R.E.</th><th>Nome</th><th>Posto</th><th>Unidade</th><th>E-mail</th><th>Perfil</th><th>Acesso</th><th>Ações</th></tr></thead>
+      <tbody>${[...pendentes, ...ativos].map(renderLinha).join('')}</tbody>
     </table>
-    </div>
-  `;
+    </div>`;
 }
 
 async function promoverUsuario(uid) {
-  const { error } = await sb.from('usuarios').update({ perfil: 'admin' }).eq('id', uid);
-  if (error) { notif('Erro ao promover usuário.', 'error'); return; }
-  const u = _usuariosCache.find(x => x.id === uid);
-  notif(`${u?.nome || 'Usuário'} promovido a Admin.`, 'success');
-  renderUsuarios();
+  await sb.from('usuarios').update({ perfil: 'admin' }).eq('id', uid);
+  notif(`Usuário promovido a Admin.`, 'success'); renderUsuarios();
 }
-
 async function rebaixarUsuario(uid) {
-  if (uid === currentUser.id) { notif('Você não pode rebaixar sua própria conta.', 'error'); return; }
-  const { error } = await sb.from('usuarios').update({ perfil: 'operador' }).eq('id', uid);
-  if (error) { notif('Erro ao rebaixar usuário.', 'error'); return; }
-  const u = _usuariosCache.find(x => x.id === uid);
-  notif(`${u?.nome || 'Usuário'} rebaixado para Operador.`, 'info');
-  renderUsuarios();
+  await sb.from('usuarios').update({ perfil: 'operador' }).eq('id', uid);
+  notif(`Usuário rebaixado.`, 'info'); renderUsuarios();
 }
-
 async function liberarUsuario(uid) {
-  const { error } = await sb.from('usuarios').update({ ativo: true }).eq('id', uid);
-  if (error) { notif('Erro ao liberar acesso.', 'error'); return; }
-  const u = _usuariosCache.find(x => x.id === uid);
-  notif(`✅ Acesso de ${u?.nome || 'usuário'} liberado com sucesso.`, 'success');
-  renderUsuarios();
+  await sb.from('usuarios').update({ ativo: true }).eq('id', uid);
+  notif(`Acesso liberado.`, 'success'); renderUsuarios();
 }
-
 async function bloquearUsuario(uid) {
-  if (uid === currentUser.id) { notif('Você não pode bloquear sua própria conta.', 'error'); return; }
-  const { error } = await sb.from('usuarios').update({ ativo: false }).eq('id', uid);
-  if (error) { notif('Erro ao bloquear acesso.', 'error'); return; }
-  const u = _usuariosCache.find(x => x.id === uid);
-  notif(`🔒 Acesso de ${u?.nome || 'usuário'} bloqueado.`, 'info');
-  renderUsuarios();
+  await sb.from('usuarios').update({ ativo: false }).eq('id', uid);
+  notif(`Acesso bloqueado.`, 'info'); renderUsuarios();
 }
-
-function toggleAdmin(uid) { promoverUsuario(uid); }
 
 function verDetalhes(id, adminView) {
   const r = _registrosCache.find(x => x.id === id);
@@ -1863,626 +1884,119 @@ function verDetalhes(id, adminView) {
     <div class="detail-grid">
       <div class="detail-row" style="grid-column:span 2"><span class="d-label">Unidade</span><span class="d-val">${r.unidade}</span></div>
       <div class="detail-row"><span class="d-label">Operador</span><span class="d-val">${r.operadorNome}</span></div>
-      ${r.elaboradoPor ? `<div class="detail-row"><span class="d-label">Elaborado por</span><span class="d-val">${r.elaboradoPor}</span></div>` : ''}
-      ${r.conferidoPor ? `<div class="detail-row"><span class="d-label">Conferido por</span><span class="d-val">${r.conferidoPor}</span></div>` : ''}
       ${sec('🔵 OPERAÇÃO')}
       ${row('Pessoas abordadas', s(d.operacao,'abordadas'))} ${row('Estab. comerciais', s(d.operacao,'estabCom'))}
-      ${row('Ocorr. ao DP', s(d.operacao,'ocorrDP'))} ${row('BOPM lavrados', s(d.operacao,'bopm'))}
-      ${row('RAIA conf.', s(d.operacao,'raia'))} ${row('Mandado B/A', s(d.operacao,'mandado'))}
-      ${row('Ato Infracional', s(d.operacao,'atoInfracional'))} ${row('Crime Exc. Tráfico', s(d.operacao,'crimeExc'))}
-      ${row('Tráfico', s(d.operacao,'trafico'))}
+      ${row('Tráfico', s(d.operacao,'trafico'))} ${row('Ocorrências Atendidas', s(d.operacao,'ocorrAtendidas'))}
       ${sec('👤 PESSOAS')}
-      ${row('Presas', s(d.pessoas,'presas'))} ${row('Adol. Sindicados', s(d.pessoas,'adolSindicados'))}
-      ${row('Adol. Apreendidos', s(d.pessoas,'adolApreendidos'))} ${row('Procurados', s(d.pessoas,'procurados'))}
-      ${row('Manifestantes', s(d.pessoas,'manifestantes'))}
+      ${row('Presas', s(d.pessoas,'presas'))} ${row('Procurados', s(d.pessoas,'procurados'))}
       ${sec('⚠️ DROGAS')}
-      ${row('Cocaína (Kg)', s(d.drogas,'cocaina'))} ${row('Crack (Kg)', s(d.drogas,'crack'))}
-      ${row('Maconha (Kg)', s(d.drogas,'maconha'))} ${row('Heroína (Kg)', s(d.drogas,'heroina'))}
-      ${row('Outra Droga (Kg)', s(d.drogas,'outraDrogaKg'))} ${row('Outra Droga (Qtde)', s(d.drogas,'outraDrogaQtde'))}
+      ${row('Cocaína (Kg)', s(d.drogas,'cocaina'))} ${row('Crack (Kg)', s(d.drogas,'crack'))} ${row('Maconha (Kg)', s(d.drogas,'maconha'))}
       ${sec('🔫 MATERIAL BÉLICO')}
-      ${row('Arma Branca', s(d.belico,'armaBranca'))} ${row('Arma Fogo Perm.', s(d.belico,'armaPermitida'))}
-      ${row('Arma Fogo Rest.', s(d.belico,'armaRestrita'))} ${row('Munição Perm.', s(d.belico,'municaoPermitida'))}
-      ${row('Munição Rest.', s(d.belico,'municaoRestrita'))} ${row('Explosivo', s(d.belico,'explosivo'))}
-      ${row('Outro Bélico', s(d.belico,'outroBelico'))}
-      ${sec('📦 APREENSÕES')}
-      ${row('Moedas (R$)', s(d.apreensoes,'moedas'))} ${row('Medicamento', s(d.apreensoes,'medicamento'))}
-      ${row('Cigarro', s(d.apreensoes,'cigarro'))} ${row('Eletrônico', s(d.apreensoes,'eletronico'))}
-      ${row('Prod. Químico', s(d.apreensoes,'quimico'))} ${row('Descaminho', s(d.apreensoes,'descaminho'))}
-      ${row('Outros', s(d.apreensoes,'outrosApreensao'))}
-      ${sec('🚗 TRÂNSITO')}
-      ${row('Acid. s/ Vítima', s(d.transito,'acidenteSemVitima'))} ${row('Acid. c/ Vítima', s(d.transito,'acidenteComVitima'))}
-      ${row('Vítima Não Fatal', s(d.transito,'vtimaNaoFatal'))} ${row('Vítima Fatal', s(d.transito,'vtimaFatal'))}
-      ${row('AIT Demais', s(d.transito,'aitDemais'))} ${row('AIT 165', s(d.transito,'ait165'))}
-      ${row('AIT 165-A', s(d.transito,'ait165a'))} ${row('AIT 228', s(d.transito,'ait228'))}
-      ${row('AIT 253-A', s(d.transito,'ait253a'))} ${row('Bloqueios', s(d.transito,'bloqueios'))}
-      ${row('Pontos Visib.', s(d.transito,'pontosVis'))} ${row('Condutores', s(d.transito,'condutores'))}
-      ${row('Bafômetro', s(d.transito,'bafometro'))} ${row('Flagrante 306', s(d.transito,'flagrante306'))}
-      ${row('CLA', s(d.transito,'cla'))} ${row('CNH', s(d.transito,'cnh'))} ${row('Outro Doc.', s(d.transito,'docApreend'))}
-      ${sec('🚘 VEÍC. FISCALIZADO')}
-      ${row('Auto', s(d.veicFiscalizado,'auto'))} ${row('Moto', s(d.veicFiscalizado,'moto'))}
-      ${row('Coletivo', s(d.veicFiscalizado,'coletivo'))} ${row('Carga', s(d.veicFiscalizado,'carga'))} ${row('Outro', s(d.veicFiscalizado,'outro'))}
-      ${sec('🚘 VEÍC. REMOVIDO')}
-      ${row('Auto', s(d.veicRemovido,'auto'))} ${row('Moto', s(d.veicRemovido,'moto'))}
-      ${row('Coletivo', s(d.veicRemovido,'coletivo'))} ${row('Carga', s(d.veicRemovido,'carga'))} ${row('Outro', s(d.veicRemovido,'outro'))}
-      ${sec('🚘 VEÍC. LOCALIZADO')}
-      ${row('Auto', s(d.veicLocalizado,'auto'))} ${row('Moto', s(d.veicLocalizado,'moto'))}
-      ${row('Coletivo', s(d.veicLocalizado,'coletivo'))} ${row('Carga', s(d.veicLocalizado,'carga'))} ${row('Outro', s(d.veicLocalizado,'outro'))}
-      ${sec('🚒 BOMBEIROS')}
-      ${row('Incêndio', s(d.bombeiros,'incendio'))} ${row('Salvamento', s(d.bombeiros,'salvamento'))}
-      ${row('Resgate', s(d.bombeiros,'resgate'))} ${row('Afogamento', s(d.bombeiros,'afogamento'))} ${row('Condução PS', s(d.bombeiros,'conducaoPS'))}
-      ${r.obs ? `<div class="detail-row" style="grid-column:span 2"><span class="d-label">Observações</span><span class="d-val">${r.obs}</span></div>` : ''}
-    </div>
-  `;
-  const acoes = document.getElementById('modal-acoes');
-  acoes.innerHTML = '';
+      ${row('Arma Fogo Perm.', s(d.belico,'armaPermitida'))} ${row('Arma Fogo Rest.', s(d.belico,'armaRestrita'))}
+    </div>`;
   abrirModal('modal-detalhe');
 }
 
-// ===================== EXPORTAR PLANILHA =====================
-// Autopreenche "Elaborado por" quando R.E. bate com o usuário logado
 function autopreencherElaborado(re) {
   if (!re || !currentUser) return;
   const mat = re.trim();
-  // Compara com a R.E. do usuário logado (sem dígito = primeiros chars)
   const matLogado = currentUser.matricula?.replace(/\D/g, '') || '';
   if (mat && (matLogado.startsWith(mat) || mat === matLogado)) {
-    document.getElementById('r-elaborado-por').value =
-      `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`;
-  } else if (mat.length < 3) {
-    document.getElementById('r-elaborado-por').value = '';
+    document.getElementById('r-elaborado-por').value = `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`;
   }
 }
 
 function abrirModalExportar() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('export-data').value = today;
-  document.getElementById('export-tipo').value = 'impacto';
-  document.getElementById('export-unidade').value = '';
   abrirModal('modal-exportar');
-}
-
-function atualizarPreviewExport() {
-  const data    = document.getElementById('export-data').value;
-  const unidade = document.getElementById('export-unidade').value;
-  if (!data) { document.getElementById('export-preview').style.display = 'none'; return; }
-  const regs = _registrosCache.filter(r => r.data === data && (unidade === '' || r.unidade === unidade));
-  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
-  const preview = document.getElementById('export-preview');
-  if (!regs.length) {
-    preview.style.display = 'block';
-    preview.innerHTML = `<span style="color:#e74c3c">Nenhum registro encontrado para essa data/unidade.</span>`;
-    return;
-  }
-  let html = `<strong style="color:var(--dourado-claro)">Registros encontrados:</strong><br><br>`;
-  turnos.forEach(t => {
-    const r = regs.filter(x => x.turno === t);
-    const status = r.length ? r.map(x => `<span class="badge ${x.status==='Validado'?'badge-validado':x.status==='Rejeitado'?'badge-rejeitado':'badge-pendente'}">${x.status}</span>`).join(' ') : '<span style="opacity:0.4">sem lançamento</span>';
-    html += `<div style="display:flex;justify-content:space-between;padding:2px 0">${t} &nbsp; ${status}</div>`;
-  });
-  preview.style.display = 'block';
-  preview.innerHTML = html;
 }
 
 function somarDados(registros) {
   const sum = (field) => registros.reduce((acc, r) => {
-    const parts = field.split('.');
-    let val = r.dados;
-    for (const p of parts) val = val?.[p];
-    return acc + (parseFloat(val) || 0);
+    const parts = field.split('.'); let val = r.dados;
+    for (const p of parts) val = val?.[p]; return acc + (parseFloat(val) || 0);
   }, 0);
   return {
-    // OPERAÇÃO
-    abordadas:      sum('operacao.abordadas'),
-    estabCom:       sum('operacao.estabCom'),
-    ocorrDP:        sum('operacao.ocorrDP'),
-    bopm:           sum('operacao.bopm'),
-    raia:           sum('operacao.raia'),
-    mandado:        sum('operacao.mandado'),
-    atoInfracional: sum('operacao.atoInfracional'),
-    crimeExc:       sum('operacao.crimeExc'),
-    trafico:          sum('operacao.trafico'),
-    ocorrAtendidas:   sum('operacao.ocorrAtendidas'),
-    efefivoEmpregado: sum('operacao.efefivoEmpregado'),
-    // PESSOAS
-    presas:           sum('pessoas.presas'),
-    adolSindicados:   sum('pessoas.adolSindicados'),
-    adolApreendidos:  sum('pessoas.adolApreendidos'),
-    procurados:       sum('pessoas.procurados'),
-    manifestantes:    sum('pessoas.manifestantes'),
-    pessoasAbordadas: sum('pessoas.pessoasAbordadas'),
-    // DROGAS
-    cocaina:        sum('drogas.cocaina'),
-    crack:          sum('drogas.crack'),
-    maconha:        sum('drogas.maconha'),
-    heroina:        sum('drogas.heroina'),
-    outraDrogaKg:   sum('drogas.outraDrogaKg'),
-    outraDrogaQtde: sum('drogas.outraDrogaQtde'),
-    // BÉLICO
-    armaBranca:       sum('belico.armaBranca'),
-    armaPermitida:    sum('belico.armaPermitida'),
-    armaRestrita:     sum('belico.armaRestrita'),
-    municaoPermitida: sum('belico.municaoPermitida'),
-    municaoRestrita:  sum('belico.municaoRestrita'),
-    explosivo:        sum('belico.explosivo'),
-    outroBelico:      sum('belico.outroBelico'),
-    // APREENSÕES
-    moedas:          sum('apreensoes.moedas'),
-    medicamento:     sum('apreensoes.medicamento'),
-    cigarro:         sum('apreensoes.cigarro'),
-    eletronico:      sum('apreensoes.eletronico'),
-    quimico:         sum('apreensoes.quimico'),
-    descaminho:      sum('apreensoes.descaminho'),
-    outrosApreensao: sum('apreensoes.outrosApreensao'),
-    // TRÂNSITO
-    acidenteSemVitima: sum('transito.acidenteSemVitima'),
-    acidenteComVitima: sum('transito.acidenteComVitima'),
-    vtimaNaoFatal:     sum('transito.vtimaNaoFatal'),
-    vtimaFatal:        sum('transito.vtimaFatal'),
-    aitDemais:         sum('transito.aitDemais'),
-    ait165:            sum('transito.ait165'),
-    ait165a:           sum('transito.ait165a'),
-    ait228:            sum('transito.ait228'),
-    ait253a:           sum('transito.ait253a'),
-    bloqueios:         sum('transito.bloqueios'),
-    pontosVis:         sum('transito.pontosVis'),
-    condutores:        sum('transito.condutores'),
-    bafometro:         sum('transito.bafometro'),
-    flagrante306:      sum('transito.flagrante306'),
-    cla:               sum('transito.cla'),
-    cnh:               sum('transito.cnh'),
-    docApreend:        sum('transito.docApreend'),
-    // VEÍCULO FISCALIZADO
-    vfAuto:     sum('veicFiscalizado.auto'),
-    vfMoto:     sum('veicFiscalizado.moto'),
-    vfColetivo: sum('veicFiscalizado.coletivo'),
-    vfCarga:    sum('veicFiscalizado.carga'),
-    vfOutro:    sum('veicFiscalizado.outro'),
-    // VEÍCULO REMOVIDO
-    vrAuto:     sum('veicRemovido.auto'),
-    vrMoto:     sum('veicRemovido.moto'),
-    vrColetivo: sum('veicRemovido.coletivo'),
-    vrCarga:    sum('veicRemovido.carga'),
-    vrOutro:    sum('veicRemovido.outro'),
-    // VEÍCULO LOCALIZADO
-    vlAuto:     sum('veicLocalizado.auto'),
-    vlMoto:     sum('veicLocalizado.moto'),
-    vlColetivo: sum('veicLocalizado.coletivo'),
-    vlCarga:    sum('veicLocalizado.carga'),
-    vlOutro:    sum('veicLocalizado.outro'),
-    // BOMBEIROS
-    incendio:   sum('bombeiros.incendio'),
-    salvamento: sum('bombeiros.salvamento'),
-    resgate:    sum('bombeiros.resgate'),
-    afogamento: sum('bombeiros.afogamento'),
-    conducaoPS: sum('bombeiros.conducaoPS'),
+    abordadas: sum('operacao.abordadas'), estabCom: sum('operacao.estabCom'), ocorrDP: sum('operacao.ocorrDP'), bopm: sum('operacao.bopm'),
+    raia: sum('operacao.raia'), mandado: sum('operacao.mandado'), atoInfracional: sum('operacao.atoInfracional'), crimeExc: sum('operacao.crimeExc'),
+    trafico: sum('operacao.trafico'), ocorrAtendidas: sum('operacao.ocorrAtendidas'), efefivoEmpregado: sum('operacao.efefivoEmpregado'),
+    presas: sum('pessoas.presas'), adolSindicados: sum('pessoas.adolSindicados'), adolApreendidos: sum('pessoas.adolApreendidos'),
+    procurados: sum('pessoas.procurados'), manifestantes: sum('pessoas.manifestantes'), pessoasAbordadas: sum('pessoas.pessoasAbordadas'),
+    cocaina: sum('drogas.cocaina'), crack: sum('drogas.crack'), maconha: sum('drogas.maconha'), heroina: sum('drogas.heroina'),
+    outraDrogaKg: sum('drogas.outraDrogaKg'), outraDrogaQtde: sum('drogas.outraDrogaQtde'),
+    armaBranca: sum('belico.armaBranca'), armaPermitida: sum('belico.armaPermitida'), armaRestrita: sum('belico.armaRestrita'),
+    municaoPermitida: sum('belico.municaoPermitida'), municaoRestrita: sum('belico.municaoRestrita'), explosivo: sum('belico.explosivo'), outroBelico: sum('belico.outroBelico'),
+    moedas: sum('apreensoes.moedas'), medicamento: sum('apreensoes.medicamento'), cigarro: sum('apreensoes.cigarro'), eletronico: sum('apreensoes.eletronico'),
+    quimico: sum('apreensoes.quimico'), descaminho: sum('apreensoes.descaminho'), outrosApreensao: sum('apreensoes.outrosApreensao'),
+    acidenteSemVitima: sum('transito.acidenteSemVitima'), acidenteComVitima: sum('transito.acidenteComVitima'), vtimaNaoFatal: sum('transito.vtimaNaoFatal'),
+    vtimaFatal: sum('transito.vtimaFatal'), aitDemais: sum('transito.aitDemais'), ait165: sum('transito.ait165'), ait165a: sum('transito.ait165a'),
+    ait228: sum('transito.ait228'), ait253a: sum('transito.ait253a'), bloqueios: sum('transito.bloqueios'), pontosVis: sum('transito.pontosVis'),
+    condutores: sum('transito.condutores'), bafometro: sum('transito.bafometro'), flagrante306: sum('transito.flagrante306'), cla: sum('transito.cla'), cnh: sum('transito.cnh'), docApreend: sum('transito.docApreend'),
+    vfAuto: sum('veicFiscalizado.auto'), vfMoto: sum('veicFiscalizado.moto'), vfColetivo: sum('veicFiscalizado.coletivo'), vfCarga: sum('veicFiscalizado.carga'), vfOutro: sum('veicFiscalizado.outro'),
+    vrAuto: sum('veicRemovido.auto'), vrMoto: sum('veicRemovido.moto'), vrColetivo: sum('veicRemovido.coletivo'), vrCarga: sum('veicRemovido.carga'), vrOutro: sum('veicRemovido.outro'),
+    vlAuto: sum('veicLocalizado.auto'), vlMoto: sum('veicLocalizado.moto'), vlColetivo: sum('veicLocalizado.coletivo'), vlCarga: sum('veicLocalizado.carga'), vlOutro: sum('veicLocalizado.outro'),
+    incendio: sum('bombeiros.incendio'), salvamento: sum('bombeiros.salvamento'), resgate: sum('bombeiros.resgate'), afogamento: sum('bombeiros.afogamento'), conducaoPS: sum('bombeiros.conducaoPS'),
   };
 }
 
 function exportarPlanilha() {
-  const data    = document.getElementById('export-data').value;
+  const data = document.getElementById('export-data').value;
   const unidade = document.getElementById('export-unidade').value;
-  const tipo    = document.getElementById('export-tipo').value;
+  const tipo = document.getElementById('export-tipo').value;
   if (!data) { notif('Selecione uma data.', 'error'); return; }
 
   const todos = _registrosCache.filter(r => r.data === data && (unidade === '' || r.unidade === unidade));
-  if (!todos.length) { notif('Nenhum registro encontrado para exportar.', 'error'); return; }
+  if (!todos.length) { notif('Nenhum registro encontrado.', 'error'); return; }
 
-  if (tipo === 'orion') {
-    exportarOrion(todos, data, unidade);
-  } else {
-    exportarImpacto(todos, data, unidade);
-  }
+  if (tipo === 'orion') { exportarOrion(todos, data, unidade); } else { exportarImpacto(todos, data, unidade); }
 }
 
 function exportarImpacto(todos, data, unidade) {
-  const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
-  const dadosPorTurno = turnos.map(t => {
-    const regs = todos.filter(r => r.turno === t);
-    return regs.length ? somarDados(regs) : null;
-  });
+  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00'];
+  const dadosPorTurno = turnos.map(t => { const regs = todos.filter(r => r.turno === t); return regs.length ? somarDados(regs) : null; });
   const T = somarDados(todos);
-
-  const elaborados = todos.map(r => r.elaboradoPor).filter(Boolean).join('; ') || '';
-  const conferidos = todos.map(r => r.conferidoPor).filter(Boolean).join('; ') || '';
-  const emails     = todos.map(r => r.emailRemetente).filter(Boolean).join('; ') || '';
-
   const [y, m, d] = data.split('-');
-  const dataExib  = `${d}/${m}/${y}`;
-  const unidLabel = unidade || '32º BPM/I - Todas as Unidades';
-
-  const col = campo => [T[campo]||0, ...dadosPorTurno.map(dt => dt ? (dt[campo]||0) : '')];
-  const R   = (label, campo) => [label, ...col(campo)];
-  const H   = label           => [label, '', '', '', ''];
-
+  
   const ws_data = [
-    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO','','','',''],
-    ['COORDENAÇÃO OPERACIONAL PM','','','',''],
-    ['OPERAÇÃO IMPACTO','','','',''],
-    ['','','','',''],
-    ['PLANILHA DE RESULTADOS','','','',''],
-    ['','','','',''],
-    [`Nome da Unidade: ${unidLabel}`,'','','',''],
-    ['','','','',''],
-    [dataExib,'00:00 AS 23:59 (TOTAL)',...turnos],
-    H('OPERAÇÃO'),
-    R('Pessoas abordadas (exc. Condutores)','abordadas'),
-    R('Estabelecimentos comerciais fiscalizados','estabCom'),
-    R('Ocorr. ao DP s/ BOPC','ocorrDP'),
-    R('Qtde BOPM lavrados','bopm'),
-    R('Qtde RAIA conf.','raia'),
-    R('Mandado de Busca/Apreensão cumpridos','mandado'),
-    R('Ato Infracional','atoInfracional'),
-    R('Crime Exc. Tráfico','crimeExc'),
-    R('Tráfico de entorpecentes','trafico'),
-    H('PESSOAS'),
-    R('Pessoas Presas','presas'),
-    R('Adolesc. Sindicados','adolSindicados'),
-    R('Adolesc. Apreendidos','adolApreendidos'),
-    R('Procurados','procurados'),
-    R('Manifestantes','manifestantes'),
-    H('DROGAS'),
-    R('Cocaína (em Kg)','cocaina'),
-    R('Crack (em Kg)','crack'),
-    R('Maconha (em Kg)','maconha'),
-    R('Heroína (em Kg)','heroina'),
-    R('Outra Droga (em Kg)','outraDrogaKg'),
-    R('Outra Droga (em Qtde)','outraDrogaQtde'),
-    H('MATERIAL BÉLICO'),
-    R('Arma Branca','armaBranca'),
-    R('Arma Fogo (Cal. Permitido)','armaPermitida'),
-    R('Arma Fogo (Cal. Restrito)','armaRestrita'),
-    R('Munição (Cal. Permitido)','municaoPermitida'),
-    R('Munição (Cal. Restrito)','municaoRestrita'),
-    R('Explosivo/Detonador','explosivo'),
-    R('Outro Mat. Bélico','outroBelico'),
-    H('APREENSÕES'),
-    R('Moedas (Valor em R$)','moedas'),
-    R('Medicamento','medicamento'),
-    R('Cigarro','cigarro'),
-    R('Eqpto Eletrônico','eletronico'),
-    R('Prod. Químico','quimico'),
-    R('Descaminho','descaminho'),
-    R('Outros Tipos Apreensão','outrosApreensao'),
-    H('TRÂNSITO (URBANO)'),
-    R('Acidentes de Trânsito SEM Vítima','acidenteSemVitima'),
-    R('Acidente COM Vítima','acidenteComVitima'),
-    R('Vítima NÃO Fatal','vtimaNaoFatal'),
-    R('Vítima FATAL','vtimaFatal'),
-    R('AIT (Exceto Artigo (165/165-A/228 e 253A)','aitDemais'),
-    R('AIT Art.165 CTB','ait165'),
-    R('AIT Art.165-A CTB','ait165a'),
-    R('AIT Art.228 CTB','ait228'),
-    R('AIT Art.253-A CTB','ait253a'),
-    R('Bloqueios','bloqueios'),
-    R('Pontos de Visibilidade','pontosVis'),
-    R('Condutores Fiscalizados','condutores'),
-    R('Teste Etilômetro Realizado','bafometro'),
-    R('Flagrante Art. 306 CTB','flagrante306'),
-    R('CLA Apreendido','cla'),
-    R('CNH Apreendido','cnh'),
-    R('Outro Documento Apreendido','docApreend'),
-    H('VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)'),
-    R('Auto','vfAuto'),
-    R('Moto','vfMoto'),
-    R('Coletivo','vfColetivo'),
-    R('Veículo de Carga','vfCarga'),
-    R('Outro tipo de Veículo','vfOutro'),
-    H('VEÍCULO REMOVIDO'),
-    R('Auto','vrAuto'),
-    R('Moto','vrMoto'),
-    R('Coletivo','vrColetivo'),
-    R('Veículo de Carga','vrCarga'),
-    R('Outro tipo de Veículo','vrOutro'),
-    H('VEÍCULO LOCALIZADO'),
-    R('Auto','vlAuto'),
-    R('Moto','vlMoto'),
-    R('Coletivo','vlColetivo'),
-    R('Veículo de Carga','vlCarga'),
-    R('Outro tipo de Veículo','vlOutro'),
-    H('BOMBEIROS'),
-    R('Incêndio','incendio'),
-    R('Salvamento','salvamento'),
-    R('Resgate','resgate'),
-    R('Afogamento (fatal)','afogamento'),
-    R('Condução ao PS / hospital','conducaoPS'),
-    ['','','','',''],
-    [`Elaborado por: ${elaborados}`,'','','',''],
-    [`Conferido por: ${conferidos}`,'','','',''],
-    [`e-mail remetente: ${emails}`,'','','',''],
+    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO'],['COORDENAÇÃO OPERACIONAL PM'],['OPERAÇÃO IMPACTO'],[],['PLANILHA DE RESULTADOS'],[],
+    [`Unidade: ${unidade || 'TODAS'}`],[],
+    [`${d}/${m}/${y}`, 'TOTAL COMBINADO', ...turnos],
+    ['OPERAÇÃO'],
+    ['Pessoas abordadas', T.abordadas, ...dadosPorTurno.map(dt => dt ? dt.abordadas : '')],
+    ['Tráfico de entorpecentes', T.trafico, ...dadosPorTurno.map(dt => dt ? dt.trafico : '')],
+    ['PESSOAS'],
+    ['Pessoas Presas', T.presas, ...dadosPorTurno.map(dt => dt ? dt.presas : '')]
   ];
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  ws['!cols'] = [{ wch:46 },{ wch:20 },{ wch:16 },{ wch:16 },{ wch:16 }];
-
-  // section row indices (0-based): OPERAÇÃO=9, PESSOAS=19, DROGAS=25, BÉLICO=32, APREENSÕES=40,
-  // TRÂNSITO=48, VF=66, VR=72, VL=78, BOMBEIROS=84
-  const secRows  = new Set([9,19,25,32,40,48,66,72,78,84]);
-  const headRows = new Set([0,1,2,4,6]);
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let ri = range.s.r; ri <= range.e.r; ri++) {
-    for (let ci = range.s.c; ci <= range.e.c; ci++) {
-      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws[addr]) continue;
-      if (headRows.has(ri)) {
-        ws[addr].s = { font:{ bold:true, sz: ri===0?13:11, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
-      } else if (ri === 8) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
-      } else if (secRows.has(ri)) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
-      } else if (ci === 0) {
-        ws[addr].s = { font:{ sz:10 }, fill:{ fgColor:{ rgb:'F0F4FF' } } };
-      } else if (ci === 1) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'0A1628' } }, fill:{ fgColor:{ rgb:'C9A227' } }, alignment:{ horizontal:'center' } };
-      } else {
-        ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
-      }
-    }
-  }
-
-  ws['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}},
-    {s:{r:2,c:0},e:{r:2,c:4}},{s:{r:4,c:0},e:{r:4,c:4}},
-    {s:{r:6,c:0},e:{r:6,c:4}},
-  ];
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Resultado IMPACTO');
-  const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
-  const filename = `IMPACTO_${data}_${safeUnid}.xlsx`;
-  XLSX.writeFile(wb, filename);
-  notif(`Planilha "${filename}" baixada com sucesso.`, 'success');
+  const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws, 'Resultado'); XLSX.writeFile(wb, `IMPACTO_${data}.xlsx`);
   fecharModal('modal-exportar');
 }
 
-// ===================== EXPORTAR ORION =====================
 function exportarOrion(todos, data, unidade) {
-  const turnos     = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00', 'DEJEM', 'DELEGADA'];
-  const dadosPorTurno = turnos.map(t => {
-    const regs = todos.filter(r => r.turno === t);
-    return regs.length ? somarDados(regs) : null;
-  });
+  const turnos = ['00:00 - 06:00', '06:00 - 18:00', '18:00 - 00:00', 'DEJEM', 'DELEGADA'];
+  const dadosPorTurno = turnos.map(t => { const regs = todos.filter(r => r.turno === t); return regs.length ? somarDados(regs) : null; });
   const T = somarDados(todos);
-
-  const elaborados = todos.map(r => r.elaboradoPor).filter(Boolean).join('; ') || '';
-  const conferidos = todos.map(r => r.conferidoPor).filter(Boolean).join('; ') || '';
-  const emails     = todos.map(r => r.emailRemetente).filter(Boolean).join('; ') || '';
-
   const [y, m, d] = data.split('-');
-  const dataExib  = `${d}/${m}/${y}`;
-  const unidLabel = unidade || '32º BPM/I - Todas as Unidades';
-
-  // Colunas: label | TOTAL | turno1 | turno2 | turno3 | DEJEM | DELEGADA
-  const numCols = 2 + turnos.length;
-  const col   = campo => [T[campo]||0, ...dadosPorTurno.map(dt => dt ? (dt[campo]||0) : '')];
-  const R     = (label, campo) => [label, ...col(campo)];
-  const H     = label => [label, ...Array(numCols - 1).fill('')];
-  const empty = () => Array(numCols).fill('');
-
+  
   const ws_data = [
-    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO', ...Array(numCols-1).fill('')],
-    ['COORDENAÇÃO OPERACIONAL PM',             ...Array(numCols-1).fill('')],
-    ['OPERAÇÃO ORION',                          ...Array(numCols-1).fill('')],
-    empty(),
-    ['PLANILHA DE RESULTADOS',                  ...Array(numCols-1).fill('')],
-    empty(),
-    [`Nome da Unidade: ${unidLabel}`,           ...Array(numCols-1).fill('')],
-    empty(),
-    [dataExib, '00:00 AS 23:59 (TOTAL)', ...turnos],
-    // OPERAÇÃO
-    H('OPERAÇÃO'),
-    R('Pessoas abordadas (exc. Condutores)',       'abordadas'),
-    R('Estabelecimentos comerciais fiscalizados',  'estabCom'),
-    R('Ocorr. ao DP s/ BOPC',                      'ocorrDP'),
-    R('Qtde BOPM lavrados',                        'bopm'),
-    R('Qtde RAIA conf.',                           'raia'),
-    R('Mandado de Busca/Apreensão cumpridos',      'mandado'),
-    R('Ato Infracional',                           'atoInfracional'),
-    R('Crime Exc. Tráfico',                        'crimeExc'),
-    R('Tráfico de entorpecentes',                  'trafico'),
-    R('Ocorrências Atendidas',                     'ocorrAtendidas'),
-    R('Efetivo Empregado',                         'efefivoEmpregado'),
-    // PESSOAS
-    H('PESSOAS'),
-    R('Pessoas Presas',        'presas'),
-    R('Adolesc. Sindicados',   'adolSindicados'),
-    R('Adolesc. Apreendidos',  'adolApreendidos'),
-    R('Procurados',            'procurados'),
-    R('Manifestantes',         'manifestantes'),
-    R('Pessoas Abordadas',     'pessoasAbordadas'),
-    // DROGAS
-    H('DROGAS'),
-    R('Cocaína (em Kg)',        'cocaina'),
-    R('Crack (em Kg)',          'crack'),
-    R('Maconha (em Kg)',        'maconha'),
-    R('Heroína (em Kg)',        'heroina'),
-    R('Outra Droga (em Kg)',    'outraDrogaKg'),
-    R('Outra Droga (em Qtde)', 'outraDrogaQtde'),
-    // BÉLICO
-    H('MATERIAL BÉLICO'),
-    R('Arma Branca',                   'armaBranca'),
-    R('Arma Fogo (Cal. Permitido)',    'armaPermitida'),
-    R('Arma Fogo (Cal. Restrito)',     'armaRestrita'),
-    R('Munição (Cal. Permitido)',      'municaoPermitida'),
-    R('Munição (Cal. Restrito)',       'municaoRestrita'),
-    R('Explosivo/Detonador',           'explosivo'),
-    R('Outro Mat. Bélico',             'outroBelico'),
-    // APREENSÕES
-    H('APREENSÕES'),
-    R('Moedas (Valor em R$)',    'moedas'),
-    R('Medicamento',             'medicamento'),
-    R('Cigarro',                 'cigarro'),
-    R('Eqpto Eletrônico',        'eletronico'),
-    R('Prod. Químico',           'quimico'),
-    R('Descaminho',              'descaminho'),
-    R('Outros Tipos Apreensão',  'outrosApreensao'),
-    // TRÂNSITO
-    H('TRÂNSITO (URBANO)'),
-    R('Acidentes de Trânsito SEM Vítima',            'acidenteSemVitima'),
-    R('Acidente COM Vítima',                          'acidenteComVitima'),
-    R('Vítima NÃO Fatal',                             'vtimaNaoFatal'),
-    R('Vítima FATAL',                                 'vtimaFatal'),
-    R('AIT (Exceto Artigo 165/165-A/228 e 253A)',    'aitDemais'),
-    R('AIT Art.165 CTB',    'ait165'),
-    R('AIT Art.165-A CTB',  'ait165a'),
-    R('AIT Art.228 CTB',    'ait228'),
-    R('AIT Art.253-A CTB',  'ait253a'),
-    R('Bloqueios',           'bloqueios'),
-    R('Pontos de Visibilidade', 'pontosVis'),
-    R('Condutores Fiscalizados', 'condutores'),
-    R('Teste Etilômetro Realizado', 'bafometro'),
-    R('Flagrante Art. 306 CTB', 'flagrante306'),
-    R('CLA Apreendido',     'cla'),
-    R('CNH Apreendido',     'cnh'),
-    R('Outro Documento Apreendido', 'docApreend'),
-    // VEÍCULOS
-    H('VEÍCULO FISCALIZADOS (NÃO REMOVIDOS)'),
-    R('Auto','vfAuto'), R('Moto','vfMoto'), R('Coletivo','vfColetivo'),
-    R('Veículo de Carga','vfCarga'), R('Outro tipo de Veículo','vfOutro'),
-    H('VEÍCULO REMOVIDO'),
-    R('Auto','vrAuto'), R('Moto','vrMoto'), R('Coletivo','vrColetivo'),
-    R('Veículo de Carga','vrCarga'), R('Outro tipo de Veículo','vrOutro'),
-    H('VEÍCULO LOCALIZADO'),
-    R('Auto','vlAuto'), R('Moto','vlMoto'), R('Coletivo','vlColetivo'),
-    R('Veículo de Carga','vlCarga'), R('Outro tipo de Veículo','vlOutro'),
-    // BOMBEIROS
-    H('BOMBEIROS'),
-    R('Incêndio','incendio'), R('Salvamento','salvamento'), R('Resgate','resgate'),
-    R('Afogamento (fatal)','afogamento'), R('Condução ao PS / hospital','conducaoPS'),
-    empty(),
-    [`Elaborado por: ${elaborados}`, ...Array(numCols-1).fill('')],
-    [`Conferido por: ${conferidos}`, ...Array(numCols-1).fill('')],
-    [`e-mail remetente: ${emails}`,  ...Array(numCols-1).fill('')],
+    ['POLÍCIA MILITAR DO ESTADO DE SÃO PAULO'],['COORDENAÇÃO OPERACIONAL PM'],['OPERAÇÃO ORION'],[],['PLANILHA DE RESULTADOS'],[],
+    [`Unidade: ${unidade || 'TODAS'}`],[],
+    [`${d}/${m}/${y}`, 'TOTAL COMBINADO', ...turnos],
+    ['OPERAÇÃO'],
+    ['Pessoas abordadas', T.abordadas, ...dadosPorTurno.map(dt => dt ? dt.abordadas : '')],
+    ['Ocorrências Atendidas', T.ocorrAtendidas, ...dadosPorTurno.map(dt => dt ? dt.ocorrAtendidas : '')]
   ];
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-
-  // Larguras das colunas
-  ws['!cols'] = [{ wch:46 },{ wch:20 }, ...turnos.map(() => ({ wch:16 }))];
-
-  // Estilos
-  const secRows  = new Set();
-  let rowIdx = 9;
-  // OPERAÇÃO=9, PESSOAS=21, DROGAS=28, BÉLICO=35, APREENSÕES=43, TRÂNSITO=51, VF=69, VR=75, VL=81, BOMBEIROS=87
-  [9,21,28,35,43,51,69,75,81,87].forEach(r => secRows.add(r));
-  const headRows = new Set([0,1,2,4,6]);
-
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let ri = range.s.r; ri <= range.e.r; ri++) {
-    for (let ci = range.s.c; ci <= range.e.c; ci++) {
-      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (!ws[addr]) continue;
-      if (headRows.has(ri)) {
-        ws[addr].s = { font:{ bold:true, sz: ri===0?13:11, color:{ rgb:'1A3A6B' } }, alignment:{ horizontal:'center' } };
-      } else if (ri === 8) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'FFFFFF' } }, fill:{ fgColor:{ rgb:'0A1628' } }, alignment:{ horizontal:'center', wrapText:true } };
-      } else if (secRows.has(ri)) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'C9A227' } }, fill:{ fgColor:{ rgb:'0D1E3E' } } };
-      } else if (ci === 0) {
-        ws[addr].s = { font:{ sz:10 }, fill:{ fgColor:{ rgb:'F0F4FF' } } };
-      } else if (ci === 1) {
-        ws[addr].s = { font:{ bold:true, sz:10, color:{ rgb:'0A1628' } }, fill:{ fgColor:{ rgb:'C9A227' } }, alignment:{ horizontal:'center' } };
-      } else {
-        ws[addr].s = { font:{ sz:10 }, alignment:{ horizontal:'center' }, fill:{ fgColor:{ rgb:'E8EEF8' } } };
-      }
-    }
-  }
-
-  const lastCol = numCols - 1;
-  ws['!merges'] = [
-    {s:{r:0,c:0},e:{r:0,c:lastCol}}, {s:{r:1,c:0},e:{r:1,c:lastCol}},
-    {s:{r:2,c:0},e:{r:2,c:lastCol}}, {s:{r:4,c:0},e:{r:4,c:lastCol}},
-    {s:{r:6,c:0},e:{r:6,c:lastCol}},
-  ];
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Resultado ORION');
-  const safeUnid = unidade ? unidade.replace(/[^a-zA-Z0-9]/g,'-') : 'TODAS';
-  const filename = `ORION_${data}_${safeUnid}.xlsx`;
-  XLSX.writeFile(wb, filename);
-  notif(`Planilha "${filename}" baixada com sucesso.`, 'success');
+  const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws, 'Orion'); XLSX.writeFile(wb, `ORION_${data}.xlsx`);
   fecharModal('modal-exportar');
-}
-
-// ===================== PWA - SERVICE WORKER =====================
-// Só ativa em produção (não no preview do Claude)
-const _isProd = location.hostname !== 'www.claudeusercontent.com'
-             && location.protocol === 'https:';
-
-if ('serviceWorker' in navigator && _isProd) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('[PWA] Service Worker registrado'))
-      .catch(e => console.warn('[PWA] Service Worker falhou:', e));
-  });
-}
-
-// Banner de instalação PWA
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Mostra o banner apenas se o usuário estiver logado
-  if (currentUser) mostrarBannerInstalar();
-});
-
-function mostrarBannerInstalar() {
-  if (document.getElementById('pwa-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'pwa-banner';
-  banner.style.cssText = `
-    position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
-    background:#122040;border:1px solid rgba(201,162,39,0.4);
-    border-radius:8px;padding:0.9rem 1.2rem;
-    display:flex;align-items:center;gap:1rem;
-    z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.4);
-    max-width:380px;width:calc(100% - 2rem);
-    animation:slideUp 0.3s ease;
-  `;
-  banner.innerHTML = `
-    <style>@keyframes slideUp{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}</style>
-    <div style="font-size:1.8rem">📲</div>
-    <div style="flex:1">
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--dourado);font-size:0.95rem">Instalar como App</div>
-      <div style="font-size:0.75rem;color:var(--cinza);margin-top:2px">Acesse sem abrir o navegador</div>
-    </div>
-    <button onclick="instalarPWA()" style="background:var(--dourado);color:#0a1628;border:none;
-      padding:0.5rem 1rem;font-family:'Rajdhani',sans-serif;font-weight:700;
-      font-size:0.85rem;border-radius:4px;cursor:pointer;white-space:nowrap">
-      Instalar
-    </button>
-    <button onclick="document.getElementById('pwa-banner').remove()" style="background:none;
-      border:none;color:var(--cinza);font-size:1.2rem;cursor:pointer;padding:0.2rem 0.4rem">
-      ✕
-    </button>
-  `;
-  document.body.appendChild(banner);
-  // Remove automaticamente após 15 segundos
-  setTimeout(() => banner?.remove(), 15000);
-}
-
-async function instalarPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') notif('App instalado com sucesso! 🎉', 'success');
-  deferredPrompt = null;
-  document.getElementById('pwa-banner')?.remove();
 }
 
 function abrirModal(id) { document.getElementById(id).classList.add('open'); }
 function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-// ===================== NOTIF =====================
 function notif(msg, tipo = 'info') {
-  const el = document.createElement('div');
-  el.className = `notif ${tipo}`;
-  el.textContent = msg;
-  document.getElementById('notif-container').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+  const el = document.createElement('div'); el.className = `notif ${tipo}`; el.textContent = msg;
+  document.getElementById('notif-container').appendChild(el); setTimeout(() => el.remove(), 4000);
 }
 </script>
 </body>
