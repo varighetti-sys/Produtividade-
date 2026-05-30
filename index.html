@@ -634,15 +634,8 @@
             <option>00:00 - 06:00</option>
             <option>06:00 - 18:00</option>
             <option>18:00 - 00:00</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="filtro-status">
-            <option value="">Todos</option>
-            <option>Pendente</option>
-            <option>Validado</option>
-            <option>Rejeitado</option>
+            <option>DEJEM</option>
+            <option>DELEGADA</option>
           </select>
         </div>
         <button class="btn-secondary" onclick="renderTodos()">Filtrar</button>
@@ -861,14 +854,9 @@
     </div>
     
     <div class="tab-bar">
-      <button class="tab active" onclick="setAdminTab('admin-pendentes')">Pendentes de Validação</button>
-      <button class="tab" onclick="setAdminTab('admin-usuarios')">Usuários</button>
+      <button class="tab active" onclick="setAdminTab('admin-usuarios')">Usuários</button>
     </div>
-
-    <div id="admin-pendentes" class="tab-panel active">
-      <div id="lista-pendentes"></div>
-    </div>
-    <div id="admin-usuarios" class="tab-panel">
+    <div id="admin-usuarios" class="tab-panel active">
       <div id="lista-usuarios"></div>
     </div>
   </div>
@@ -1462,7 +1450,6 @@ function setAdminTab(tabId) {
   document.querySelectorAll('#page-admin .tab-panel').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById(tabId).classList.add('active');
-  if (tabId === 'admin-pendentes') renderPendentes();
   if (tabId === 'admin-usuarios') renderUsuarios();
 }
 
@@ -1494,7 +1481,7 @@ function cancelarEdicao() {
 function editarRegistro(id) {
   const r = _registrosCache.find(x => x.id === id);
   if (!r) return;
-  if (r.status === 'Validado' && currentUser.perfil !== 'admin') {
+  if (r.status === 'Registrado' && currentUser.perfil !== 'admin') {
     notif('Registro validado não pode ser editado por operadores.', 'error'); return;
   }
   const d = r.dados;
@@ -1582,7 +1569,7 @@ async function salvarRegistro() {
 
   if (editandoId) {
     const old = _registrosCache.find(x => x.id === editandoId);
-    const novoStatus = (old?.status === 'Validado' && currentUser.perfil === 'admin') ? 'Validado' : 'Pendente';
+    const novoStatus = 'Registrado';
     const { error } = await sb.from('registros').update({
       ...payload,
       status:      novoStatus,
@@ -1607,12 +1594,12 @@ async function salvarRegistro() {
       ...payload,
       operador_id:   currentUser.id,
       operador_nome: `${currentUser.matricula} - ${currentUser.posto} ${currentUser.nome}`,
-      status: 'Pendente',
+      status: 'Validado',
     });
 
     hideLoading();
     if (error) { notif('Erro ao salvar registro: ' + error.message, 'error'); return; }
-    notif('Registro do turno salvo! Aguardando validação.', 'success');
+    notif('Registro do turno salvo com sucesso!', 'success');
   }
 
   limparForm();
@@ -1625,8 +1612,7 @@ function badgeTurno(turno) {
   return `<span class="badge ${map[turno] || ''}">${turno}</span>`;
 }
 function badgeStatus(status) {
-  const map = { 'Pendente': 'badge-pendente', 'Validado': 'badge-validado', 'Rejeitado': 'badge-rejeitado' };
-  return `<span class="badge ${map[status] || ''}">${status}</span>`;
+  return `<span class="badge badge-validado">${status || 'Registrado'}</span>`;
 }
 function fmtData(d) {
   if (!d) return '-';
@@ -1644,9 +1630,8 @@ function renderTabelaRegistros(registros, container, adminView = false) {
   let rows = registros.map(r => {
     const isAdmin    = currentUser.perfil === 'admin';
     const isOwner    = r.operadorId === currentUser.id;
-    const validado   = r.status === 'Validado';
-    const podeEditar  = isAdmin || (!validado && isOwner);
-    const podeExcluir = isAdmin || (!validado && isOwner);
+    const podeEditar  = isAdmin || isOwner;
+    const podeExcluir = isAdmin || isOwner;
     return `
     <tr>
       <td>${fmtData(r.data)}</td>
@@ -1656,7 +1641,6 @@ function renderTabelaRegistros(registros, container, adminView = false) {
       <td>${s(r,'pessoas.presas')}</td>
       <td>${s(r,'operacao.trafico')}</td>
       <td>${s(r,'belico.armaPermitida')+s(r,'belico.armaRestrita')}</td>
-      <td>${badgeStatus(r.status)}</td>
       <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
         <button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem" onclick="verDetalhes('${r.id}', ${adminView})">🔍</button>
         ${podeEditar  ? `<button class="btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.7rem;border-color:rgba(52,152,219,0.4);color:#3498db" onclick="editarRegistro('${r.id}')">✏️</button>` : ''}
@@ -1669,7 +1653,7 @@ function renderTabelaRegistros(registros, container, adminView = false) {
     <table class="registros-table">
       <thead><tr>
         <th>Data</th><th>Turno</th><th>Unidade</th><th>Operador</th>
-        <th>Presos</th><th>Tráfico</th><th>Armas</th><th>Status</th><th>Ações</th>
+        <th>Presos</th><th>Tráfico</th><th>Armas</th><th>Ações</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -1697,12 +1681,17 @@ async function renderDashboard() {
   const s = (r, path) => { let v=r.dados; for(const p of path.split('.')) v=v?.[p]; return parseFloat(v)||0; };
   const totalPresos  = all.reduce((a,r) => a + s(r,'pessoas.presas'), 0);
   const totalTrafico = all.reduce((a,r) => a + s(r,'operacao.trafico'), 0);
-  const pendentes    = all.filter(r => r.status === 'Pendente').length;
+  const totalAbord   = all.reduce((a,r) => a + s(r,'operacao.abordadas'), 0);
   document.getElementById('dash-cards').innerHTML = `
     <div class="dash-card" style="--cor-destaque:#c9a227">
       <div class="label">Total de Registros</div>
       <div class="value">${all.length}</div>
       <div class="sub">${todayRegs.length} hoje</div>
+    </div>
+    <div class="dash-card" style="--cor-destaque:#3498db">
+      <div class="label">Pessoas Abordadas</div>
+      <div class="value">${totalAbord}</div>
+      <div class="sub">acumulado</div>
     </div>
     <div class="dash-card" style="--cor-destaque:#e74c3c">
       <div class="label">Pessoas Presas</div>
@@ -1713,11 +1702,6 @@ async function renderDashboard() {
       <div class="label">Oc. Tráfico</div>
       <div class="value">${totalTrafico}</div>
       <div class="sub">ocorrências</div>
-    </div>
-    <div class="dash-card" style="--cor-destaque:#f39c12">
-      <div class="label">Pendentes Validação</div>
-      <div class="value">${pendentes}</div>
-      <div class="sub">aguardando admin</div>
     </div>
   `;
   renderHoje();
@@ -1750,43 +1734,7 @@ function renderTodos() {
 }
 
 async function renderAdmin() {
-  await renderPendentes();
-}
-
-async function renderPendentes() {
-  showLoading('Carregando pendentes...');
-  const { data, error } = await sb.from('registros').select('*').eq('status','Pendente').order('criado_em');
-  hideLoading();
-  const el = document.getElementById('lista-pendentes');
-  if (error || !data?.length) {
-    el.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>Nenhum registro pendente de validação.</p></div>`;
-    return;
-  }
-  const regs = data.map(dbParaApp);
-  // Atualiza cache com pendentes
-  regs.forEach(r => { if (!_registrosCache.find(x => x.id === r.id)) _registrosCache.push(r); });
-  const rows = regs.map(r => `
-    <tr>
-      <td>${fmtData(r.data)}</td>
-      <td>${badgeTurno(r.turno)}</td>
-      <td>${r.unidade}</td>
-      <td>${r.operadorNome}</td>
-      <td>${new Date(r.criadoEm).toLocaleString('pt-BR')}</td>
-      <td>
-        <button class="btn-secondary" style="padding:0.3rem 0.7rem;font-size:0.72rem;margin-right:4px" onclick="verDetalhes('${r.id}', true)">Detalhar</button>
-        <button class="btn-success" style="margin-right:4px" onclick="validar('${r.id}')">Validar</button>
-        <button class="btn-danger" onclick="rejeitar('${r.id}')">Rejeitar</button>
-      </td>
-    </tr>
-  `).join('');
-  el.innerHTML = `
-    <div style="overflow-x:auto">
-    <table class="registros-table">
-      <thead><tr><th>Data</th><th>Turno</th><th>Unidade</th><th>Operador</th><th>Enviado em</th><th>Ações</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    </div>
-  `;
+  await renderUsuarios();
 }
 
 async function renderUsuarios() {
@@ -1908,7 +1856,6 @@ function verDetalhes(id, adminView) {
     <div class="detail-grid">
       <div class="detail-row" style="grid-column:span 2"><span class="d-label">Unidade</span><span class="d-val">${r.unidade}</span></div>
       <div class="detail-row"><span class="d-label">Operador</span><span class="d-val">${r.operadorNome}</span></div>
-      <div class="detail-row"><span class="d-label">Status</span><span class="d-val">${badgeStatus(r.status)}</span></div>
       ${r.elaboradoPor ? `<div class="detail-row"><span class="d-label">Elaborado por</span><span class="d-val">${r.elaboradoPor}</span></div>` : ''}
       ${r.conferidoPor ? `<div class="detail-row"><span class="d-label">Conferido por</span><span class="d-val">${r.conferidoPor}</span></div>` : ''}
       ${sec('🔵 OPERAÇÃO')}
@@ -1960,44 +1907,8 @@ function verDetalhes(id, adminView) {
     </div>
   `;
   const acoes = document.getElementById('modal-acoes');
-  if (adminView && currentUser.perfil === 'admin' && r.status === 'Pendente') {
-    acoes.innerHTML = `
-      <button class="btn-danger" onclick="rejeitar('${r.id}');fecharModal('modal-detalhe')">Rejeitar</button>
-      <button class="btn-success" onclick="validar('${r.id}');fecharModal('modal-detalhe')">Validar Registro</button>
-    `;
-  } else {
-    acoes.innerHTML = '';
-  }
+  acoes.innerHTML = '';
   abrirModal('modal-detalhe');
-}
-
-async function validar(id) {
-  const { error } = await sb.from('registros').update({
-    status: 'Validado',
-    validado_em: new Date().toISOString(),
-    validado_por: currentUser.nome,
-  }).eq('id', id);
-  if (error) { notif('Erro ao validar.', 'error'); return; }
-  // Atualiza cache local
-  const r = _registrosCache.find(x => x.id === id);
-  if (r) { r.status = 'Validado'; r.validadoPor = currentUser.nome; r.validadoEm = new Date().toISOString(); }
-  notif('Registro validado com sucesso.', 'success');
-  await renderAdmin();
-  if (currentPage === 'dashboard') await renderDashboard();
-}
-
-async function rejeitar(id) {
-  const { error } = await sb.from('registros').update({
-    status: 'Rejeitado',
-    validado_em: new Date().toISOString(),
-    validado_por: currentUser.nome,
-  }).eq('id', id);
-  if (error) { notif('Erro ao rejeitar.', 'error'); return; }
-  const r = _registrosCache.find(x => x.id === id);
-  if (r) { r.status = 'Rejeitado'; r.validadoPor = currentUser.nome; }
-  notif('Registro rejeitado.', 'error');
-  await renderAdmin();
-  if (currentPage === 'dashboard') await renderDashboard();
 }
 
 // ===================== EXPORTAR PLANILHA =====================
