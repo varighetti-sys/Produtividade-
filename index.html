@@ -638,6 +638,20 @@
             <option>DELEGADA</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Cidade / Unidade</label>
+          <select id="filtro-unidade">
+            <option value="">Todas</option>
+            <option>3 CIA PM</option>
+            <option>Pel - Cândido Mota</option>
+            <option>Pel - Palmital</option>
+            <option>GP - Platina</option>
+            <option>GP - CNP</option>
+            <option>GP - Ibirarema</option>
+            <option>GP - Florinéia</option>
+            <option>GP - Tarumã</option>
+          </select>
+        </div>
         <button class="btn-secondary" onclick="renderTodos()">Filtrar</button>
       </div>
       <div id="registros-todos"></div>
@@ -1583,13 +1597,6 @@ async function salvarRegistro() {
     editandoId = null;
     setEditMode(false);
   } else {
-    // Checar duplicata para operador
-    if (currentUser.perfil !== 'admin') {
-      const { data: dup } = await sb.from('registros')
-        .select('id').eq('data', data).eq('turno', turno).eq('unidade', unidade).maybeSingle();
-      if (dup) { hideLoading(); notif('Já existe um registro para este turno/unidade/data.', 'error'); return; }
-    }
-
     const { error } = await sb.from('registros').insert({
       ...payload,
       operador_id:   currentUser.id,
